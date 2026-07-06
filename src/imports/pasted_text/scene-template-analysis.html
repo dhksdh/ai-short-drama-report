@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>片场模版 · 爽点分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://registry.npmmirror.com/echarts/5.5.0/files/dist/echarts.min.js"></script>
+    <!-- 国内备选 CDN，若上方失效可换用：https://cdn.bootcdn.net/ajax/libs/echarts/5.5.0/echarts.min.js -->
+    <style>
+        :root {
+            --night-purple: #2D1B4E;
+            --deep-purple: #1A0F2E;
+            --golden: #F5C842;
+            --golden-light: #FFE066;
+            --cream: #F5F0E8;
+            --slate: #3D3D3D;
+            --warm-gray: #8A8A8A;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', 'Noto Sans SC', sans-serif;
+            color: var(--cream);
+        }
+
+        /* === 背景层 === */
+        .bg-layer {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            background: linear-gradient(160deg, #0D0520 0%, #1A0F2E 25%, #2D1B4E 50%, #1A0F2E 75%, #0D0520 100%);
+        }
+
+        .bg-aura {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-aura-1 {
+            width: 800px; height: 800px;
+            top: -30%; left: -20%;
+            background: radial-gradient(circle, rgba(245,200,66,0.10) 0%, rgba(245,200,66,0.03) 40%, transparent 70%);
+            animation: auraFloat 25s infinite ease-in-out;
+        }
+
+        .bg-aura-2 {
+            width: 600px; height: 600px;
+            bottom: -15%; right: -10%;
+            background: radial-gradient(circle, rgba(232,181,129,0.08) 0%, rgba(232,181,129,0.02) 40%, transparent 70%);
+            animation: auraFloat 20s infinite ease-in-out reverse;
+        }
+
+        @keyframes auraFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(40px, -60px) scale(1.08); }
+            66% { transform: translate(-30px, 40px) scale(0.94); }
+        }
+
+        .stars {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            border-radius: 50%;
+            background: white;
+            animation: twinkle 4s infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.15; transform: scale(1); }
+            50% { opacity: 0.9; transform: scale(1.6); }
+        }
+
+        /* === 横向滚动容器 === */
+        .slides-container {
+            position: relative;
+            z-index: 2;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .slides-container::-webkit-scrollbar { display: none; }
+
+        .slide {
+            flex: 0 0 100vw;
+            width: 100vw;
+            height: 100vh;
+            scroll-snap-align: start;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 2rem;
+        }
+
+        /* === 导航指示器 === */
+        .nav-dots {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: flex;
+            gap: 14px;
+        }
+
+        .nav-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(245,200,66,0.25);
+            border: 1.5px solid rgba(245,200,66,0.5);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-dot.active {
+            background: var(--golden);
+            border-color: var(--golden-light);
+            box-shadow: 0 0 12px rgba(245,200,66,0.5);
+        }
+
+        .nav-arrow {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(45,27,78,0.6);
+            border: 1px solid rgba(245,200,66,0.3);
+            color: var(--golden);
+            font-size: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            user-select: none;
+            backdrop-filter: blur(8px);
+        }
+
+        .nav-arrow:hover {
+            background: rgba(245,200,66,0.15);
+            border-color: var(--golden);
+        }
+
+        .nav-arrow-left { left: 20px; }
+        .nav-arrow-right { right: 20px; }
+
+        .nav-arrow.hidden { opacity: 0; pointer-events: none; }
+
+        .sp-header {
+            text-align: center;
+            padding: 10px 20px 8px;
+        }
+
+        .sp-title {
+            font-family: 'Georgia', 'Microsoft YaHei', 'PingFang SC', sans-serif, 'SimSun', serif;
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--golden);
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(245,200,66,0.25);
+        }
+
+        .sp-subtitle {
+            color: var(--warm-gray);
+            margin-top: 6px;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+
+        .sp-control {
+            width: 95%;
+            margin: auto;
+            padding: 8px 0;
+            position: relative;
+        }
+
+        .sp-slider-box {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: var(--cream);
+            font-size: 12px;
+        }
+
+        .sp-slider-box span { flex-shrink: 0; }
+
+        .sp-slider-box input[type=range] {
+            flex: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            background: rgba(245,200,66,0.2);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .sp-slider-box input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            background: #F5C842;
+            border: 2px solid #FFE066;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(245,200,66,0.5);
+        }
+
+        #spChart {
+            width: 98%;
+            min-height: 480px;
+            margin: auto;
+            border: 1px solid rgba(245,200,66,0.18);
+            box-shadow: 0 0 30px rgba(245,200,66,0.06);
+            background: rgba(26,15,46,0.5);
+        }
+
+        .sp-source {
+            text-align: center;
+            padding: 12px 20px;
+            margin: 0 auto;
+            width: 95%;
+            border: 1px solid rgba(245,200,66,0.12);
+            border-radius: 6px;
+            background: rgba(45,27,78,0.3);
+        }
+
+        .sp-source .sp-source-icon {
+            color: var(--golden);
+            font-size: 11px;
+            margin-right: 4px;
+            letter-spacing: 1px;
+        }
+
+        .sp-source p {
+            display: inline;
+            color: var(--warm-gray);
+            font-size: 11px;
+            line-height: 1.7;
+            letter-spacing: 0.5px;
+        }
+
+        .sp-section-title {
+            text-align: center;
+            font-family: 'Georgia', 'Microsoft YaHei', 'PingFang SC', sans-serif, 'SimSun', serif;
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--golden);
+            letter-spacing: 3px;
+            margin-bottom: 6px;
+            text-shadow: 0 0 15px rgba(245,200,66,0.25);
+        }
+
+        .sp-section-sub {
+            text-align: center;
+            color: var(--warm-gray);
+            font-size: 11px;
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+        }
+
+        .sp-divider {
+            width: 100px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--golden), transparent);
+            margin: 0 auto 20px;
+        }
+
+        /* ============ 左侧面板删除 ============ */
+        .left-panel { display: none; }
+
+        /* ============ 右侧滚动面板（旧）删除 ============ */
+        .right-panel {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* ============ 第一屏：4 卡片 2x2 ============ */
+        .screen1-inner {
+            width: 100%;
+            max-width: 1200px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .screen1-inner .sp-divider {
+            margin-bottom: 12px;
+        }
+
+        .screen1-inner .sp-section-title {
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+
+        .screen1-inner .sp-section-sub {
+            margin-bottom: 20px;
+        }
+
+        .sp-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 16px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .sp-card {
+            background: rgba(45,27,78,0.45);
+            border: 1px solid rgba(245,200,66,0.15);
+            border-radius: 8px;
+            padding: 16px 16px 10px;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.4s, box-shadow 0.4s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sp-card:hover {
+            border-color: rgba(245,200,66,0.35);
+            box-shadow: 0 0 24px rgba(245,200,66,0.08);
+        }
+
+        .sp-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--golden), var(--golden-light), var(--golden));
+        }
+
+        .sp-card-header {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            margin-bottom: 6px;
+            flex-shrink: 0;
+        }
+
+        .sp-card-num {
+            font-family: 'Georgia', 'Microsoft YaHei', 'PingFang SC', sans-serif, 'SimSun', serif;
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--golden);
+            opacity: 0.55;
+            line-height: 1;
+        }
+
+        .sp-card-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--cream);
+            letter-spacing: 1px;
+        }
+
+        .sp-card-chart {
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .sp-card-chart-tall {
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .sp-card-desc {
+            margin-top: 4px;
+            font-size: 10px;
+            color: var(--warm-gray);
+            line-height: 1.6;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+        }
+
+        .sp-card-desc strong { color: var(--golden-light); }
+
+        /* ============ 第二屏：对比图表 ============ */
+        .screen2-inner {
+            width: 100%;
+            max-width: 1200px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .screen2-inner .sp-header {
+            flex-shrink: 0;
+        }
+
+        .screen2-inner .sp-title {
+            font-size: 22px;
+        }
+
+        .screen2-inner .sp-control {
+            flex-shrink: 0;
+            padding: 6px 0;
+        }
+
+        .screen2-inner #spChart {
+            flex: 1;
+            min-height: 0;
+            height: auto;
+            margin: 0;
+        }
+
+        .screen2-inner .sp-source {
+            flex-shrink: 0;
+            margin-top: 8px;
+        }
+
+        /* ============ 第三屏：结论 ============ */
+        .screen3-inner {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .sp-conclusion-final {
+            width: 100%;
+            background: linear-gradient(135deg, rgba(45,27,78,0.8) 0%, rgba(26,15,46,0.9) 100%);
+            border: 1px solid rgba(245,200,66,0.35);
+            border-radius: 10px;
+            padding: 40px 48px 36px;
+            box-shadow: 0 0 36px rgba(245,200,66,0.06);
+        }
+
+        .sp-conclusion-final::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--golden-light), var(--golden), var(--golden-light), transparent);
+            border-radius: 10px 10px 0 0;
+        }
+
+        .sp-conclusion-final h3 {
+            font-family: 'Georgia', 'Microsoft YaHei', 'PingFang SC', sans-serif, 'SimSun', serif;
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--golden);
+            letter-spacing: 2px;
+            margin: 0 0 18px;
+        }
+
+        .sp-conclusion-final p {
+            font-size: 14px;
+            color: var(--warm-gray);
+            line-height: 2.1;
+            letter-spacing: 0.5px;
+        }
+
+        .sp-conclusion-final p strong {
+            color: var(--golden-light);
+            font-weight: 700;
+        }
+
+        .sp-tag {
+            display: inline-block;
+            font-size: 10px;
+            letter-spacing: 2px;
+            padding: 4px 12px;
+            border-radius: 3px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            background: rgba(245,200,66,0.1);
+            color: var(--golden-light);
+            border: 1px solid rgba(245,200,66,0.2);
+        }
+
+        .sp-footer {
+            margin-top: 20px;
+            color: var(--warm-gray);
+            font-size: 10px;
+            letter-spacing: 1px;
+            opacity: 0.4;
+        }
+
+        /* ============ 分屏响应式 ============ */
+        @media (max-width: 900px) {
+            .sp-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+                overflow-y: auto;
+            }
+            .slide { padding: 1rem; }
+            .nav-arrow { display: none; }
+        }
+
+        /* ============ 精緻金色边框 ============ */
+        .board-frame {
+            position: fixed;
+            top: 10px; left: 10px;
+            right: 10px; bottom: 10px;
+            z-index: 100;
+            pointer-events: none;
+            border-radius: 24px;
+            border: 2.5px solid rgba(245, 200, 66, 0.75);
+            box-shadow:
+                inset 0 0 60px rgba(245, 200, 66, 0.04),
+                0 0 30px rgba(245, 200, 66, 0.06),
+                0 0 2px rgba(245, 200, 66, 0.2);
+        }
+        .board-clip {
+            position: fixed;
+            left: 50%;
+            top: 8px;
+            transform: translateX(-50%);
+            z-index: 101;
+            pointer-events: none;
+            width: 200px;
+            height: 20px;
+            background: linear-gradient(180deg, rgba(245, 200, 66, 0.55) 0%, rgba(200, 160, 50, 0.40) 100%);
+            border: 1px solid rgba(245, 200, 66, 0.35);
+            border-radius: 6px 6px 3px 3px;
+            box-shadow: 0 2px 12px rgba(245, 200, 66, 0.15);
+            backdrop-filter: blur(6px);
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景 -->
+    <div class="bg-layer"></div>
+    <div class="bg-aura bg-aura-1"></div>
+    <div class="bg-aura bg-aura-2"></div>
+
+    <!-- ====== 横向滑动容器 ====== -->
+    <div class="slides-container" id="slidesContainer">
+
+        <!-- ========== 第一屏：关键发现 ========== -->
+        <div class="slide" id="slide1">
+            <div class="screen1-inner">
+                <div class="sp-divider"></div>
+                <div class="sp-section-title">AI短剧爽点更密集、更均匀，反转是核心引擎</div>
+                <div class="sp-section-sub"></div>
+
+                <div class="sp-grid">
+
+                    <div class="sp-card">
+                        <div class="sp-card-header">
+                            <span class="sp-card-num">01</span>
+                            <span class="sp-card-label">视频中端AI短剧爽点强度断崖式领先</span>
+                        </div>
+                        <div class="sp-card-chart" id="chart01"></div>
+                        <div class="sp-card-desc">
+                            视频 <strong>20%～40%</strong> 处，AI短剧爽点强度高达 <strong>72～94</strong>，而普通剧情低至 <strong>30～38</strong>——此时段差异最大，AI短剧完全碾压。
+                        </div>
+                    </div>
+
+                    <div class="sp-card">
+                        <div class="sp-card-header">
+                            <span class="sp-card-num">02</span>
+                            <span class="sp-card-label">反转占AI爽点四成，是普通剧情的2.7倍</span>
+                        </div>
+                        <div class="sp-card-chart" id="chart02"></div>
+                        <div class="sp-card-desc">
+                            AI短剧中<strong>"反转"</strong>类爽点占总量的 <strong>~40%</strong>，绝对数量是普通剧情的 <strong>2.7 倍</strong>。高频反转是其"全程高能"体验的核心驱动力。
+                        </div>
+                    </div>
+
+                    <div class="sp-card">
+                        <div class="sp-card-header">
+                            <span class="sp-card-num">03</span>
+                            <span class="sp-card-label">AI短剧爽点分布更均匀、波动远小于普通剧情</span>
+                        </div>
+                        <div class="sp-card-chart" id="chart03"></div>
+                        <div class="sp-card-desc">
+                            AI短剧的爽点强度在 <strong>72～96</strong> 窄幅区间内波动，分布极为均匀；相比之下普通剧情波动剧烈（<strong>30～100</strong>），爽点设置缺乏稳定性。AI短剧展现出更为<strong>科学、可控</strong>的爽点投放策略。
+                        </div>
+                    </div>
+
+                    <div class="sp-card">
+                        <div class="sp-card-header">
+                            <span class="sp-card-num">04</span>
+                            <span class="sp-card-label">AI短剧爽点强度领先普通剧情28个点</span>
+                        </div>
+                        <div class="sp-card-chart-tall" id="chart04"></div>
+                        <div class="sp-card-desc">
+                            全进度平均，AI短剧爽点强度领先普通剧情 <strong>~28 个点</strong>，体现了AI短剧<strong>"全程高密度刺激"</strong>的核心特征。不过末段（80%后）差距明显收窄，普通剧情结尾发力更猛。
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 第二屏：对比图表 ========== -->
+        <div class="slide" id="slide2">
+            <div class="screen2-inner">
+                <div class="sp-header">
+                    <div class="sp-title">AI短剧与普通剧情向视频爽点结构对比</div>
+                    <div class="sp-subtitle">左右拖移可切换显示对比</div>
+                </div>
+
+                <div class="sp-control">
+                    <div class="sp-slider-box">
+                        <span style="color: var(--golden);">AI短剧</span>
+                        <input id="compareSlider" type="range" min="0" max="100" value="0">
+                        <span style="color: #FFE066;">普通剧情</span>
+                    </div>
+                </div>
+
+                <div id="spChart"></div>
+
+                <div class="sp-source">
+                    <span class="sp-source-icon">◆ 数据来源</span>
+                    <p>基于红果短剧弹幕数据的即时反馈信号，通过内容分类标注与时间戳建模，构建爽点识别模型，对比分析AI短剧与普通剧情向视频的爽点分布特征。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 第三屏：结论 ========== -->
+        <div class="slide" id="slide3">
+            <div class="screen3-inner">
+                <div class="sp-divider"></div>
+                <div class="sp-section-title">结 论</div>
+
+                <div class="sp-conclusion-final" style="position: relative;">
+                    <h3>AI短剧，赢在"爽得勤"而不是"爽得猛"</h3>
+                    <p>
+                        数据显示，AI短剧的爽点强度全程保持在 <strong>72～96</strong> 的高位，每到一个进度节点都有新的爽感刺激；而普通剧情的爽点时高时低，节奏忽快忽慢。
+                        打个比方：普通剧情像坐过山车——有高潮有低谷；AI短剧则像开赛车——全程高速，弯道超车一个接一个，根本不给观众喘息的机会。
+                    </p>
+                </div>
+
+                <div class="sp-footer">爽点结构分析</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ====== 导航 ====== -->
+    <div class="nav-arrow nav-arrow-left hidden" id="navLeft">◀</div>
+    <div class="nav-arrow nav-arrow-right" id="navRight">▶</div>
+    <div class="nav-dots" id="navDots">
+        <div class="nav-dot active" data-index="0"></div>
+        <div class="nav-dot" data-index="1"></div>
+        <div class="nav-dot" data-index="2"></div>
+    </div>
+
+    <script>
+        // ========== 横滑导航 ==========
+        (function() {
+            var container = document.getElementById('slidesContainer');
+            var navLeft = document.getElementById('navLeft');
+            var navRight = document.getElementById('navRight');
+            var dots = document.querySelectorAll('.nav-dot');
+            var total = 3;
+            var current = 0;
+
+            function updateNav(idx) {
+                current = idx;
+                dots.forEach(function(d) { d.classList.remove('active'); });
+                if (dots[idx]) dots[idx].classList.add('active');
+                if (idx === 0) { navLeft.classList.add('hidden'); } else { navLeft.classList.remove('hidden'); }
+                if (idx === total - 1) { navRight.classList.add('hidden'); } else { navRight.classList.remove('hidden'); }
+            }
+
+            navRight.addEventListener('click', function() {
+                if (current < total - 1) {
+                    current++;
+                    container.scrollTo({ left: current * window.innerWidth, behavior: 'smooth' });
+                    updateNav(current);
+                }
+            });
+
+            navLeft.addEventListener('click', function() {
+                if (current > 0) {
+                    current--;
+                    container.scrollTo({ left: current * window.innerWidth, behavior: 'smooth' });
+                    updateNav(current);
+                }
+            });
+
+            dots.forEach(function(dot) {
+                dot.addEventListener('click', function() {
+                    var idx = parseInt(this.getAttribute('data-index'));
+                    current = idx;
+                    container.scrollTo({ left: current * window.innerWidth, behavior: 'smooth' });
+                    updateNav(current);
+                });
+            });
+
+            container.addEventListener('scroll', function() {
+                var idx = Math.round(container.scrollLeft / window.innerWidth);
+                if (idx !== current) { updateNav(idx); }
+            });
+
+            // 键盘翻页
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowRight' && current < total - 1) {
+                    current++;
+                    container.scrollTo({ left: current * window.innerWidth, behavior: 'smooth' });
+                    updateNav(current);
+                } else if (e.key === 'ArrowLeft' && current > 0) {
+                    current--;
+                    container.scrollTo({ left: current * window.innerWidth, behavior: 'smooth' });
+                    updateNav(current);
+                }
+            });
+        })();
+
+        // ====================================================================
+        // 爽点数据 & ECharts 图表
+        // ====================================================================
+        const xData = ['0%','10%','20%','30%','40%','50%','60%','70%','80%','90%','100%'];
+        const aiLine = [88,96,80,94,72,96,84,92,78,90,72];
+        const normalLine = [65,72,30,35,38,50,55,65,78,95,100];
+        const aiReverse = [20,30,15,35,10,40,18,30,15,38,5];
+        const aiFight = [12,18,8,20,6,22,10,15,8,18,2];
+        const aiFace = [15,20,10,25,8,28,12,18,10,22,4];
+        const aiEntry = [8,10,5,8,4,8,5,6,4,7,1];
+        const normalReverse = [2,3,4,8,5,10,8,10,8,20,18];
+        const normalFight = [1,2,2,5,4,8,5,8,6,18,15];
+        const normalFace = [1,2,3,4,3,6,5,7,6,12,10];
+        const normalEntry = [3,4,5,6,5,7,6,8,7,10,9];
+
+        const chartTheme = {
+            textStyle: { color: '#F5F0E8', fontFamily: 'Microsoft YaHei, PingFang SC, sans-serif' },
+            axisLine: { lineStyle: { color: '#F5C842' } },
+            axisLabel: { color: '#8A8A8A' },
+            splitLine: { lineStyle: { color: 'rgba(245,200,66,0.06)' } },
+            backgroundColor: 'transparent',
+            animationDuration: 1500,
+            animationEasing: 'cubicInOut'
+        };
+
+        // ========== 主图表 ==========
+        (function() {
+            const chart = echarts.init(document.getElementById('spChart'));
+            function render(v) {
+                const t = v / 100;
+                const aiOp = Math.max(1 - t * 0.85, 0.12);
+                const nOp = 0.60 + t * 0.40;
+                chart.setOption({
+                    animationDuration: 1200,
+                    backgroundColor: 'transparent',
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'shadow' },
+                        backgroundColor: 'rgba(26,15,46,0.9)',
+                        borderColor: '#F5C842',
+                        textStyle: { color: '#F5F0E8', fontFamily: 'Microsoft YaHei, PingFang SC, sans-serif' }
+                    },
+                    legend: {
+                        top: 8, itemWidth: 14, itemHeight: 10, itemGap: 12,
+                        textStyle: { color: '#F5C842', fontFamily: 'Microsoft YaHei, PingFang SC, sans-serif', fontSize: 9 }
+                    },
+                    grid: { left: '5%', right: '5%', top: 80, bottom: 110 },
+                    dataZoom: [
+                        {
+                            type: 'slider', bottom: 30, start: 0, end: 100,
+                            borderColor: 'rgba(245,200,66,0.25)',
+                            backgroundColor: 'rgba(26,15,46,0.7)',
+                            fillerColor: 'rgba(245,200,66,0.15)',
+                            handleStyle: { color: '#F5C842', borderColor: '#FFE066' },
+                            textStyle: { color: '#8A8A8A' },
+                            dataBackground: {
+                                lineStyle: { color: 'rgba(245,200,66,0.2)' },
+                                areaStyle: { color: 'rgba(245,200,66,0.06)' }
+                            }
+                        }
+                    ],
+                    xAxis: {
+                        type: 'category', data: xData, name: '视频进度',
+                        nameLocation: 'center', nameGap: 55,
+                        nameTextStyle: { color: '#F5C842', fontSize: 11, fontFamily: 'Microsoft YaHei, PingFang SC, sans-serif' },
+                        axisLine: { lineStyle: { color: '#F5C842' } },
+                        axisLabel: { color: '#8A8A8A' },
+                        splitLine: { show: false }
+                    },
+                    yAxis: [
+                        {
+                            type: 'value', name: '"爽点"数量',
+                            nameTextStyle: { color: '#F5C842', fontFamily: 'Microsoft YaHei, PingFang SC, sans-serif' },
+                            axisLine: { lineStyle: { color: '#F5C842' } },
+                            axisLabel: { color: '#8A8A8A' },
+                            splitLine: { lineStyle: { color: 'rgba(245,200,66,0.06)' } }
+                        },
+                        {
+                            type: 'value', name: '"爽点"强度', max: 100,
+                            nameTextStyle: { color: '#F5C842', fontFamily: 'Microsoft YaHei, PingFang SC, sans-serif' },
+                            axisLine: { lineStyle: { color: '#F5C842' } },
+                            axisLabel: { color: '#8A8A8A' },
+                            splitLine: { show: false }
+                        }
+                    ],
+                    series: [
+                        { name: 'AI-反转', type: 'bar', stack: 'AI', data: aiReverse, itemStyle: { color: '#FFE066', opacity: aiOp } },
+                        { name: 'AI-冲突', type: 'bar', stack: 'AI', data: aiFight, itemStyle: { color: '#F5C842', opacity: aiOp } },
+                        { name: 'AI-意外', type: 'bar', stack: 'AI', data: aiFace, itemStyle: { color: '#D4A830', opacity: aiOp } },
+                        { name: 'AI-登场', type: 'bar', stack: 'AI', data: aiEntry, itemStyle: { color: '#B8921E', opacity: aiOp } },
+                        { name: '普通-反转', type: 'bar', stack: 'Normal', data: normalReverse, itemStyle: { color: '#C4A0E0', opacity: nOp } },
+                        { name: '普通-冲突', type: 'bar', stack: 'Normal', data: normalFight, itemStyle: { color: '#A870D0', opacity: nOp } },
+                        { name: '普通-意外', type: 'bar', stack: 'Normal', data: normalFace, itemStyle: { color: '#8B50B8', opacity: nOp } },
+                        { name: '普通-登场', type: 'bar', stack: 'Normal', data: normalEntry, itemStyle: { color: '#6E38A0', opacity: nOp } },
+                        {
+                            name: 'AI短剧累计爽点强度',
+                            type: 'line', yAxisIndex: 1, smooth: true, symbolSize: 8,
+                            lineStyle: { width: 3, opacity: aiOp, color: '#F5C842' },
+                            itemStyle: { opacity: aiOp, color: '#F5C842' },
+                            data: aiLine
+                        },
+                        {
+                            name: '普通剧情情感触发点强度',
+                            type: 'line', yAxisIndex: 1, smooth: true, symbolSize: 8,
+                            lineStyle: { width: 3, type: 'dashed', opacity: nOp, color: '#e870a0' },
+                            itemStyle: { opacity: nOp, color: '#e870a0' },
+                            data: normalLine
+                        }
+                    ]
+                }, true);
+            }
+            render(0);
+            document.getElementById('compareSlider').addEventListener('input', function(e) {
+                render(Number(e.target.value));
+            });
+            window.addEventListener('resize', function() { chart.resize(); });
+        })();
+
+        // ========== 卡片 01 ==========
+        (function() {
+            const c = echarts.init(document.getElementById('chart01'));
+            const labels = ['20%','30%','40%'];
+            const aiVals = [80,94,72];
+            const nVals = [30,35,38];
+            const gaps = [50,59,34];
+            c.setOption({
+                ...chartTheme,
+                tooltip: {
+                    trigger: 'axis', axisPointer: { type: 'shadow' },
+                    backgroundColor: 'rgba(26,15,46,0.9)', borderColor: '#F5C842',
+                    textStyle: { color: '#F5F0E8', fontFamily: 'Microsoft YaHei, PingFang SC, sans-serif' },
+                    formatter: function(p) {
+                        var i = p[0].dataIndex;
+                        return '<strong>'+labels[i]+'</strong><br/>'+p[0].marker+' AI短剧：<strong>'+aiVals[i]+'</strong><br/>'+p[1].marker+' 普通剧情：<strong>'+nVals[i]+'</strong><br/><span style="color:#F5C842;">差距：<strong>'+gaps[i]+'</strong> 点</span>';
+                    }
+                },
+                legend: { show: true, top: 0, textStyle: { color: '#8A8A8A', fontFamily: 'Microsoft YaHei, PingFang SC, sans-serif', fontSize: 10 } },
+                grid: { left: '8%', right: '8%', top: 36, bottom: 42 },
+                xAxis: { type: 'category', data: labels, name: '视频进度', nameLocation: 'center', nameGap: 26, nameTextStyle: { color: '#8A8A8A', fontSize: 10 }, axisLine: { lineStyle: { color: '#F5C842' } }, axisLabel: { color: '#8A8A8A', fontSize: 11 }, splitLine: { show: false } },
+                yAxis: { type: 'value', name: '强度', nameTextStyle: { color: '#8A8A8A', fontSize: 9 }, axisLabel: { color: '#8A8A8A', fontSize: 9 }, splitLine: { lineStyle: { color: 'rgba(245,200,66,0.05)' } } },
+                series: [
+                    {
+                        name: 'AI短剧', type: 'bar', data: aiVals, barWidth: 32,
+                        borderRadius: [4,4,0,0],
+                        itemStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#FFE066'},{offset:1,color:'#F5C842'}]) },
+                        label: { show: true, position: 'top', color: '#FFE066', fontSize: 11, fontWeight: 'bold', formatter: '{c}' }
+                    },
+                    {
+                        name: '普通剧情', type: 'bar', data: nVals, barWidth: 32,
+                        borderRadius: [4,4,0,0],
+                        itemStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#f090b8'},{offset:1,color:'#d05890'}]) },
+                        label: { show: true, position: 'top', color: '#f090b8', fontSize: 11, fontWeight: 'bold', formatter: '{c}' }
+                    },
+                    {
+                        name: '差距', type: 'line', data: gaps, smooth: true,
+                        symbol: 'diamond', symbolSize: 12,
+                        lineStyle: { width: 1.5, type: 'dotted', color: '#F5C842' },
+                        itemStyle: { color: '#F5C842', borderColor: '#FFE066', borderWidth: 1.5 },
+                        label: { show: true, position: 'top', color: '#F5C842', fontSize: 10, fontWeight: 'bold', formatter: '差 {c}' }
+                    }
+                ]
+            });
+        })();
+
+        // ========== 卡片 02 ==========
+        (function() {
+            var c = echarts.init(document.getElementById('chart02'));
+            var aiT = aiLine.reduce(function(a,b){return a+b});
+            var nT = normalLine.reduce(function(a,b){return a+b});
+            var aiRT = aiReverse.reduce(function(a,b){return a+b});
+            var aiFT = aiFight.reduce(function(a,b){return a+b});
+            var aiFaT = aiFace.reduce(function(a,b){return a+b});
+            var aiET = aiEntry.reduce(function(a,b){return a+b});
+            var nRT = normalReverse.reduce(function(a,b){return a+b});
+            var nFT = normalFight.reduce(function(a,b){return a+b});
+            var nFaT = normalFace.reduce(function(a,b){return a+b});
+            var nET = normalEntry.reduce(function(a,b){return a+b});
+            var aiPct = [
+                parseFloat(((aiRT/aiT)*100).toFixed(1)),
+                parseFloat(((aiFT/aiT)*100).toFixed(1)),
+                parseFloat(((aiFaT/aiT)*100).toFixed(1)),
+                parseFloat(((aiET/aiT)*100).toFixed(1))
+            ];
+            var nPct = [
+                parseFloat(((nRT/nT)*100).toFixed(1)),
+                parseFloat(((nFT/nT)*100).toFixed(1)),
+                parseFloat(((nFaT/nT)*100).toFixed(1)),
+                parseFloat(((nET/nT)*100).toFixed(1))
+            ];
+            // AI 取负值向左，普通保持正值向右
+            var aiNeg = aiPct.map(function(v){return -v});
+            c.setOption({
+                ...chartTheme,
+                tooltip: {
+                    trigger: 'axis', axisPointer: { type: 'shadow' },
+                    backgroundColor: 'rgba(26,15,46,0.9)', borderColor: '#F5C842',
+                    textStyle: { color: '#F5F0E8', fontFamily: 'Microsoft YaHei, PingFang SC, sans-serif' },
+                    formatter: function(p) {
+                        var cat = p[0].axisValue;
+                        var aiV = Math.abs(p[0].value);
+                        var nV = p[1].value;
+                        return '<strong>'+cat+'</strong><br/>AI短剧：'+aiV+'%<br/>普通剧情：'+nV+'%';
+                    }
+                },
+                legend: { show: true, top: 0, textStyle: { color: '#8A8A8A', fontFamily: 'Microsoft YaHei, PingFang SC, sans-serif', fontSize: 10 } },
+                grid: { left: '13%', right: '13%', top: 44, bottom: 46 },
+                xAxis: {
+                    type: 'value', max: 40, min: -40,
+                    name: '占比 (%)',
+                    nameLocation: 'center', nameGap: 28,
+                    nameTextStyle: { color: '#8A8A8A', fontSize: 10 },
+                    axisLabel: { color: '#8A8A8A', fontSize: 9, formatter: function(v){return Math.abs(v)+'%';} },
+                    axisLine: { lineStyle: { color: '#F5C842' } },
+                    splitLine: { lineStyle: { color: 'rgba(245,200,66,0.05)' } }
+                },
+                yAxis: {
+                    type: 'category',
+                    data: ['反转','冲突','意外','登场'],
+                    position: 'center',
+                    boundaryGap: true,
+                    axisLabel: { color: '#F5C842', fontSize: 10, fontWeight: 'bold', margin: 20 },
+                    axisLine: { show: false },
+                    axisTick: { show: false },
+                    splitLine: { show: false }
+                },
+                series: [
+                    {
+                        name: 'AI短剧', type: 'bar',
+                        barGap: '-100%',
+                        itemStyle: { color: '#FFE066' },
+                        data: [
+                            { value: -aiPct[0], itemStyle: { color: '#FFE066' } },
+                            { value: -aiPct[1], itemStyle: { color: '#F5C842' } },
+                            { value: -aiPct[2], itemStyle: { color: '#D4A830' } },
+                            { value: -aiPct[3], itemStyle: { color: '#B8921E' } }
+                        ],
+                        barWidth: 20,
+                        label: { show: true, position: 'left', color: '#FFE066', fontSize: 10, fontWeight: 'bold', formatter: function(p){return Math.abs(p.value)+'%';}, distance: 8 }
+                    },
+                    {
+                        name: '普通剧情', type: 'bar',
+                        barGap: '-100%',
+                        itemStyle: { color: '#C4A0E0' },
+                        data: [
+                            { value: nPct[0], itemStyle: { color: '#C4A0E0' } },
+                            { value: nPct[1], itemStyle: { color: '#A870D0' } },
+                            { value: nPct[2], itemStyle: { color: '#8B50B8' } },
+                            { value: nPct[3], itemStyle: { color: '#6E38A0' } }
+                        ],
+                        barWidth: 20,
+                        label: { show: true, position: 'right', color: '#D4B0E8', fontSize: 10, fontWeight: 'bold', formatter: '{c}%', distance: 8 }
+                    }
+                ]
+            });
+        })();
+
+        // ========== 卡片 03 ==========
+        (function() {
+            var c = echarts.init(document.getElementById('chart03'));
+            var aiM = aiLine.reduce(function(a,b){return a+b})/aiLine.length;
+            var nM = normalLine.reduce(function(a,b){return a+b})/normalLine.length;
+            var aiS = Math.sqrt(aiLine.reduce(function(s,v){return s+(v-aiM)*(v-aiM)},0)/aiLine.length);
+            var nS = Math.sqrt(normalLine.reduce(function(s,v){return s+(v-nM)*(v-nM)},0)/normalLine.length);
+            var aiU = xData.map(function(){return Math.round(aiM+aiS)});
+            var aiL = xData.map(function(){return Math.round(aiM-aiS)});
+            var nU = xData.map(function(){return Math.round(nM+nS)});
+            var nL = xData.map(function(){return Math.round(nM-nS)});
+            c.setOption({
+                ...chartTheme, animationDuration: 1800,
+                tooltip: {
+                    trigger: 'axis', backgroundColor: 'rgba(26,15,46,0.9)', borderColor: '#F5C842',
+                    textStyle: { color: '#F5F0E8', fontFamily: 'Microsoft YaHei, PingFang SC, sans-serif' },
+                    formatter: function(p) {
+                        var i = p[0]?p[0].dataIndex:0;
+                        return '<strong>'+xData[i]+'</strong><br/>'+p[0].marker+' AI短剧：<strong>'+aiLine[i]+'</strong><br/>'+p[1].marker+' 普通剧情：<strong>'+normalLine[i]+'</strong><br/><span style="color:#8A8A8A;font-size:10px;">AI波动区间：'+Math.round(aiM-aiS)+'~'+Math.round(aiM+aiS)+' | 普通波动区间：'+Math.round(nM-nS)+'~'+Math.round(nM+nS)+'</span>';
+                    }
+                },
+                legend: { show: true, top: 0, data: ['AI短剧','普通剧情'], textStyle: { color: '#8A8A8A', fontFamily: 'Microsoft YaHei, PingFang SC, sans-serif', fontSize: 10 } },
+                grid: { left: '8%', right: '8%', top: 36, bottom: 42 },
+                xAxis: { type: 'category', data: xData, name: '视频进度', nameLocation: 'center', nameGap: 26, nameTextStyle: { color: '#8A8A8A', fontSize: 10 }, boundaryGap: false, axisLine: { lineStyle: { color: '#F5C842' } }, axisLabel: { color: '#8A8A8A', fontSize: 9 }, splitLine: { show: false } },
+                yAxis: { type: 'value', min: 0, max: 110, name: '强度', nameTextStyle: { color: '#8A8A8A', fontSize: 9 }, axisLabel: { color: '#8A8A8A', fontSize: 9 }, splitLine: { lineStyle: { color: 'rgba(245,200,66,0.05)' } } },
+                series: [
+                    { name: 'AI 波动区间', type: 'line', data: aiU, lineStyle: { color: 'transparent', width: 0 }, symbol: 'none', stack: 'ai-band', areaStyle: { color: 'rgba(245,200,66,0.08)' }, silent: true },
+                    { name: 'AI 波动区间', type: 'line', data: aiL, lineStyle: { color: 'transparent', width: 0 }, symbol: 'none', stack: 'ai-band', areaStyle: { color: 'transparent' }, silent: true },
+                    { name: '普通波动区间', type: 'line', data: nU, lineStyle: { color: 'transparent', width: 0 }, symbol: 'none', stack: 'n-band', areaStyle: { color: 'rgba(232,112,160,0.06)' }, silent: true },
+                    { name: '普通波动区间', type: 'line', data: nL, lineStyle: { color: 'transparent', width: 0 }, symbol: 'none', stack: 'n-band', areaStyle: { color: 'transparent' }, silent: true },
+                    {
+                        name: 'AI短剧', type: 'line', data: aiLine, smooth: true, symbol: 'circle', symbolSize: 7,
+                        lineStyle: { width: 2.5, color: '#F5C842' },
+                        itemStyle: { color: '#F5C842', borderColor: '#FFE066', borderWidth: 1.5 },
+                        label: { show: false },
+                        areaStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(245,200,66,0.15)'},{offset:1,color:'rgba(245,200,66,0.01)'}]) },
+                        markLine: { silent: true, symbol: 'none', lineStyle: { color: '#F5C842', type: 'dashed', width: 1, opacity: 0.5 }, label: { color: '#FFE066', fontSize: 9, formatter: 'AI均值 {c}', position: 'insideStartTop' }, data: [{ yAxis: Math.round(aiM) }] }
+                    },
+                    {
+                        name: '普通剧情', type: 'line', data: normalLine, smooth: true, symbol: 'diamond', symbolSize: 7,
+                        lineStyle: { width: 2, type: 'dashed', color: '#e870a0' },
+                        itemStyle: { color: '#e870a0', borderColor: '#F5F0E8', borderWidth: 1.5 },
+                        label: { show: false },
+                        areaStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(232,112,160,0.12)'},{offset:1,color:'rgba(232,112,160,0.01)'}]) },
+                        markLine: { silent: true, symbol: 'none', lineStyle: { color: '#e870a0', type: 'dashed', width: 1, opacity: 0.5 }, label: { color: '#f090b8', fontSize: 9, formatter: '普通均值 {c}', position: 'insideStartTop' }, data: [{ yAxis: Math.round(nM) }] }
+                    }
+                ]
+            });
+        })();
+
+        // ========== 卡片 04 ==========
+        (function() {
+            var c = echarts.init(document.getElementById('chart04'));
+            var gapsAll = aiLine.map(function(v,i){return v-normalLine[i]});
+            var avgG = (gapsAll.reduce(function(a,b){return a+b})/gapsAll.length).toFixed(1);
+            // 只在高差距点和负差距点显示标签，避免 11 个标签重叠
+            var labelShow = [true, true, true, true, true, true, false, false, false, true, true];
+            c.setOption({
+                ...chartTheme, animationDuration: 2000,
+                tooltip: {
+                    trigger: 'axis', backgroundColor: 'rgba(26,15,46,0.9)', borderColor: '#F5C842',
+                    textStyle: { color: '#F5F0E8', fontFamily: 'Microsoft YaHei, PingFang SC, sans-serif' },
+                    formatter: function(p) {
+                        var i = p[0].dataIndex;
+                        return '<strong>'+xData[i]+'</strong><br/>AI短剧：'+aiLine[i]+'<br/>普通剧情：'+normalLine[i]+'<br/><span style="color:#F5C842;font-weight:bold;">差距：'+gapsAll[i]+' 点</span>';
+                    }
+                },
+                grid: { left: '10%', right: '10%', top: 38, bottom: 44 },
+                xAxis: { type: 'category', data: xData, name: '视频进度', nameLocation: 'center', nameGap: 28, nameTextStyle: { color: '#8A8A8A', fontSize: 10 }, axisLine: { lineStyle: { color: '#F5C842' } }, axisLabel: { color: '#8A8A8A', fontSize: 8, rotate: 30 }, splitLine: { show: false } },
+                yAxis: { type: 'value', name: '差距（点）', nameTextStyle: { color: '#8A8A8A', fontSize: 9 }, axisLabel: { color: '#8A8A8A', fontSize: 9 }, splitLine: { lineStyle: { color: 'rgba(245,200,66,0.05)' } } },
+                series: [{
+                    type: 'bar', data: gapsAll, barWidth: 14, barGap: '40%', borderRadius: [3,3,0,0],
+                    itemStyle: { color: function(p) {
+                        var g = gapsAll[p.dataIndex];
+                        return g > 50 ? new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#FFE066'},{offset:1,color:'#F5C842'}])
+                            : g > 0 ? new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#F5C842'},{offset:1,color:'#B8973A'}])
+                            : new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#e870a0'},{offset:1,color:'#9e3070'}]);
+                    }},
+                    label: { show: true, position: 'top', color: '#FFE066', fontSize: 8, fontWeight: 'bold', formatter: function(p) {
+                        var i = p.dataIndex;
+                        if (!labelShow[i]) return '';
+                        return p.value > 0 ? '+'+p.value : p.value;
+                    }},
+                    markLine: { silent: true, symbol: 'none', lineStyle: { color: '#FFE066', type: 'dashed', width: 1.5 }, label: { show: true, color: '#FFE066', fontSize: 9, fontWeight: 'bold', formatter: '平均 +{c}', position: 'start', distance: 6 }, data: [{ yAxis: parseFloat(avgG) }] },
+                    markArea: { silent: true, data: [[{ xAxis: '20%', itemStyle: { color: 'transparent' } },{ xAxis: '40%', itemStyle: { color: 'rgba(245,200,66,0.05)', borderColor: 'rgba(245,200,66,0.2)', borderWidth: 1, borderType: 'dashed' } }]], label: { show: true, position: 'top', color: '#F5C842', fontSize: 9, formatter: '中段鸿沟', distance: 16 } }
+                }]
+            });
+        })();
+
+        // 全局 resize
+        window.addEventListener('resize', function() {
+            var els = document.querySelectorAll('.sp-card-chart, .sp-card-chart-tall');
+            els.forEach(function(el) {
+                var inst = echarts.getInstanceByDom(el);
+                if (inst) inst.resize();
+            });
+        });
+    </script>
+
+    <!-- ====== 金色边框（叠加层，不影响交互） ====== -->
+    <div class="board-frame"></div>
+    <div class="board-clip"></div>
+
+</body>
+</html>

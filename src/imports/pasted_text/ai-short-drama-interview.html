@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI短剧人物访谈 | 当技术遇见创作</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+        :root {
+            --bg-deep: #0d0d14;
+            --bg-card: rgba(20, 18, 35, 0.85);
+            --gold: #c9a84c;
+            --gold-light: #e8d5a3;
+            --pink: #d4a5a5;
+            --pink-bright: #e8b4b8;
+            --text-main: #e8e4dc;
+            --text-dim: #8a8599;
+            --border: rgba(201, 168, 76, 0.25);
+            --purple: #6b5b95;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Noto Sans SC', sans-serif;
+            line-height: 1.8;
+            overflow-x: hidden;
+        }
+
+        /* 背景装饰 */
+        .bg-decoration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background: 
+                radial-gradient(ellipse at 20% 50%, rgba(107, 91, 149, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(201, 168, 76, 0.05) 0%, transparent 40%),
+                radial-gradient(ellipse at 50% 80%, rgba(212, 165, 165, 0.05) 0%, transparent 40%);
+        }
+
+        /* 聚光灯效果 */
+        .spotlight {
+            position: fixed;
+            top: -20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 800px;
+            background: conic-gradient(from 180deg at 50% 0%, transparent 0deg, rgba(201, 168, 76, 0.03) 30deg, rgba(201, 168, 76, 0.08) 60deg, rgba(201, 168, 76, 0.03) 90deg, transparent 120deg);
+            pointer-events: none;
+            z-index: 1;
+            filter: blur(40px);
+        }
+
+        /* 场记板装饰 */
+        .clapperboard {
+            position: fixed;
+            bottom: 5%;
+            right: 5%;
+            width: 80px;
+            height: 70px;
+            opacity: 0.08;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .clapperboard::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 15px;
+            background: repeating-linear-gradient(
+                45deg,
+                var(--gold),
+                var(--gold) 8px,
+                #1a1a1a 8px,
+                #1a1a1a 16px
+            );
+            border-radius: 2px 2px 0 0;
+        }
+
+        .clapperboard::after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 0;
+            width: 100%;
+            height: 55px;
+            background: rgba(201, 168, 76, 0.1);
+            border: 1px solid rgba(201, 168, 76, 0.2);
+            border-radius: 0 0 2px 2px;
+        }
+
+        /* 头部 */
+        header {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 80px 20px 60px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-tag {
+            display: none;
+        }
+
+        h1 {
+            display: none;
+            font-family: 'Noto Serif SC', serif;
+            font-size: clamp(32px, 5vw, 56px);
+            font-weight: 700;
+            color: var(--gold-light);
+            letter-spacing: 8px;
+            margin-bottom: 16px;
+            text-shadow: 0 0 60px rgba(201, 168, 76, 0.2);
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: var(--text-dim);
+            letter-spacing: 2px;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .divider {
+            width: 60px;
+            height: 1px;
+            background: var(--gold);
+            margin: 30px auto;
+            opacity: 0.5;
+        }
+
+        /* 主容器 */
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        /* 人物卡片 缩小间距 */
+        .interview-card {
+            display: flex;
+            gap: 0;
+            margin-bottom: 40px;
+            position: relative;
+            opacity: 0;
+            transform: translateY(40px);
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        .interview-card:nth-child(1) { animation-delay: 0.1s; }
+        .interview-card:nth-child(2) { animation-delay: 0.2s; }
+        .interview-card:nth-child(3) { animation-delay: 0.3s; }
+        .interview-card:nth-child(4) { animation-delay: 0.4s; }
+        .interview-card:nth-child(5) { animation-delay: 0.5s; }
+        .interview-card:nth-child(6) { animation-delay: 0.6s; }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 左侧插画区 */
+        .illustration {
+            flex-shrink: 0;
+            width: 320px;
+            min-height: 380px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .illustration-bg {
+            position: absolute;
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(107, 91, 149, 0.15) 0%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .illustration-ring {
+            position: absolute;
+            width: 220px;
+            height: 220px;
+            border: 1px solid rgba(201, 168, 76, 0.15);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .illustration-ring::before {
+            content: '';
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            border: 1px dashed rgba(201, 168, 76, 0.1);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* SVG人物插画 */
+        .person-svg {
+            width: 200px;
+            height: 280px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 右侧文本区 */
+        .content {
+            flex: 1;
+            padding: 20px 0 20px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .name-row {
+            display: flex;
+            align-items: baseline;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+
+        .name {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--gold-light);
+            letter-spacing: 2px;
+        }
+
+        .role-tag {
+            font-size: 12px;
+            color: var(--pink);
+            border: 1px solid rgba(212, 165, 165, 0.3);
+            padding: 2px 12px;
+            letter-spacing: 1px;
+        }
+
+        .company {
+            font-size: 14px;
+            color: var(--text-dim);
+            margin-bottom: 16px;
+            letter-spacing: 1px;
+        }
+
+        .quote {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 17px;
+            line-height: 1.8;
+            color: var(--text-main);
+            position: relative;
+            padding-left: 24px;
+            border-left: 2px solid var(--border);
+        }
+
+        .quote::before {
+            content: '"';
+            position: absolute;
+            left: -8px;
+            top: -16px;
+            font-size: 48px;
+            color: var(--gold);
+            opacity: 0.3;
+            font-family: Georgia, serif;
+        }
+
+        .highlight {
+            color: var(--pink-bright);
+            font-weight: 500;
+            position: relative;
+        }
+
+        .highlight-gold {
+            color: var(--gold-light);
+            font-weight: 500;
+        }
+
+        /* 来源标注 */
+        .source {
+            display: none;
+        }
+
+        /* 卡片交替布局 */
+        .interview-card:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .interview-card:nth-child(even) .content {
+            padding: 20px 50px 20px 0;
+        }
+
+        .interview-card:nth-child(even) .quote {
+            padding-left: 24px;
+            padding-right: 0;
+            border-left: 2px solid var(--border);
+            border-right: none;
+            text-align: left;
+        }
+
+        .interview-card:nth-child(even) .quote::before {
+            left: -8px;
+            right: auto;
+        }
+
+        .interview-card:nth-child(even) .name-row,
+        .interview-card:nth-child(even) .company {
+            text-align: right;
+            justify-content: flex-end;
+        }
+
+        /* 连接线装饰 */
+        .connector {
+            display: none;
+        }
+
+        /* 底部 */
+        footer {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 40px 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-text {
+            font-size: 14px;
+            color: var(--text-dim);
+            letter-spacing: 4px;
+        }
+
+        .footer-gold {
+            color: var(--gold);
+            font-weight: 500;
+        }
+
+        /* 响应式 */
+        @media (max-width: 900px) {
+            .interview-card,
+            .interview-card:nth-child(even) {
+                flex-direction: column;
+            }
+
+            .illustration {
+                width: 100%;
+                min-height: 280px;
+            }
+
+            .content,
+            .interview-card:nth-child(even) .content {
+                padding: 20px 0;
+            }
+
+            .quote,
+            .interview-card:nth-child(even) .quote {
+                padding-left: 24px;
+                padding-right: 0;
+                border-left: 2px solid var(--border);
+                border-right: none;
+                text-align: left;
+            }
+
+            .quote::before,
+            .interview-card:nth-child(even) .quote::before {
+                left: -8px;
+                right: auto;
+            }
+
+            .name-row,
+            .company,
+            .interview-card:nth-child(even) .name-row,
+            .interview-card:nth-child(even) .company {
+                text-align: left;
+                justify-content: flex-start;
+            }
+        }
+
+        /* 滚动条 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-deep);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(201, 168, 76, 0.3);
+            border-radius: 3px;
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <div class="bg-decoration"></div>
+    <div class="spotlight"></div>
+    <div class="clapperboard"></div>
+
+    <header>
+        <div class="divider"></div>
+        <p class="subtitle">
+            调研小组访谈结果 · 四位创作者与观察者的声音<br>
+            效率、流量与创作理想之间，人该如何自处
+        </p>
+    </header>
+
+    <div class="container">
+
+        <!-- 赵优秀 - 制片人 男 -->
+        <div class="interview-card">
+            <div class="illustration">
+                <div class="illustration-bg"></div>
+                <div class="illustration-ring"></div>
+                <svg class="person-svg" viewBox="0 0 200 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- 男性制片人 -->
+                    <circle cx="100" cy="65" r="32" stroke="#c9a84c" stroke-width="1.5" fill="none" opacity="0.7"/>
+                    <path d="M78 95 L122 95 L130 130 L135 180 Q138 230 125 260 L75 260 Q62 230 65 180 L70 130 Z" stroke="#c9a84c" stroke-width="1.4" fill="none" opacity="0.6"/>
+                    <line x1="100" y1="95" x2="100" y2="130" stroke="#c9a84c" stroke-width="1.2" opacity="0.4"/>
+                    <line x1="85" y1="140" x2="115" y2="140" stroke="#c9a84c" stroke-width="1" opacity="0.4"/>
+                    <!-- 场记板 -->
+                    <rect x="72" y="210" width="56" height="10" rx="1" stroke="#d4a5a5" stroke-width="1" fill="none" opacity="0.5"/>
+                    <line x1="80" y1="210" x2="80" y2="220" stroke="#d4a5a5" stroke-width="0.8" opacity="0.5"/>
+                    <line x1="90" y1="210" x2="90" y2="220" stroke="#d4a5a5" stroke-width="0.8" opacity="0.5"/>
+                    <line x1="100" y1="210" x2="100" y2="220" stroke="#d4a5a5" stroke-width="0.8" opacity="0.5"/>
+                    <line x1="110" y1="210" x2="110" y2="220" stroke="#d4a5a5" stroke-width="0.8" opacity="0.5"/>
+                    <line x1="120" y1="210" x2="120" y2="220" stroke="#d4a5a5" stroke-width="0.8" opacity="0.5"/>
+                </svg>
+            </div>
+            <div class="content">
+                <div class="name-row">
+                    <span class="name">赵优秀</span>
+                    <span class="role-tag">总制片人</span>
+                </div>
+                <div class="company">听花岛 · 六公主爱电影</div>
+                <div class="quote">
+                    我们团队早期患有<span class="highlight">"AI羞耻症"</span>，很长一段时间里，在有AI相应技术的情况下还坚持<span class="highlight">"手搓"</span>方式，比如租水池进行水下拍摄。现在终于和AI<span class="highlight-gold">和解了</span>。但和解并不意味着妥协。当AI生成的画面越来越接近实拍时，真正考验的是导演的<span class="highlight">审美判断</span>和<span class="highlight">叙事能力</span>。
+                </div>
+            </div>
+        </div>
+
+        <!-- 陈霖贤 - 从业者 男 -->
+        <div class="interview-card">
+            <div class="illustration">
+                <div class="illustration-bg"></div>
+                <div class="illustration-ring"></div>
+                <svg class="person-svg" viewBox="0 0 200 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- 男性创作者 -->
+                    <circle cx="100" cy="60" r="30" stroke="#c9a84c" stroke-width="1.5" fill="none" opacity="0.7"/>
+                    <path d="M75 90 L125 90 L132 140 L136 190 Q140 240 128 260 L72 260 Q60 240 64 190 L68 140 Z" stroke="#c9a84c" stroke-width="1.4" fill="none" opacity="0.6"/>
+                    <line x1="100" y1="90" x2="100" y2="125" stroke="#c9a84c" stroke-width="1.2" opacity="0.4"/>
+                    <line x1="82" y1="135" x2="118" y2="135" stroke="#c9a84c" stroke-width="1" opacity="0.4"/>
+                    <!-- 摄像机 -->
+                    <rect x="80" y="215" width="40" height="25" rx="3" stroke="#d4a5a5" stroke-width="1" fill="none" opacity="0.5"/>
+                    <circle cx="100" cy="228" r="8" stroke="#d4a5a5" stroke-width="1" fill="none" opacity="0.5"/>
+                    <circle cx="100" cy="228" r="3" stroke="#d4a5a5" stroke-width="0.8" fill="none" opacity="0.4"/>
+                    <rect x="75" y="210" width="50" height="5" rx="1" stroke="#d4a5a5" stroke-width="0.8" fill="none" opacity="0.4"/>
+                </svg>
+            </div>
+            <div class="content">
+                <div class="name-row">
+                    <span class="name">陈霖贤</span>
+                    <span class="role-tag">AI影视从业者</span>
+                </div>
+                <div class="company">影视内容创作者</div>
+                <div class="quote">
+                    我并不认为AI有多么厉害。优秀短片能做成这样，是创作者本身足够出色，并不是说AI有多么厉害。AI短片能做出质感，终究还是<span class="highlight-gold">归功于人</span>。
+                </div>
+            </div>
+        </div>
+
+        <!-- 吴海明 - CEO 男 -->
+        <div class="interview-card">
+            <div class="illustration">
+                <div class="illustration-bg"></div>
+                <div class="illustration-ring"></div>
+                <svg class="person-svg" viewBox="0 0 200 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- 男性CEO -->
+                    <circle cx="100" cy="65" r="33" stroke="#c9a84c" stroke-width="1.5" fill="none" opacity="0.7"/>
+                    <path d="M76 98 L124 98 L133 150 L138 200 Q142 245 130 260 L70 260 Q58 245 62 200 L67 150 Z" stroke="#c9a84c" stroke-width="1.4" fill="none" opacity="0.6"/>
+                    <line x1="100" y1="98" x2="100" y2="135" stroke="#c9a84c" stroke-width="1.2" opacity="0.4"/>
+                    <path d="M76 145 L124 145" stroke="#c9a84c" stroke-width="1" opacity="0.4"/>
+                    <!-- 上升箭头 -->
+                    <path d="M88 225 L100 210 L112 225" stroke="#d4a5a5" stroke-width="1.2" fill="none" opacity="0.5"/>
+                    <line x1="100" y1="210" x2="100" y2="245" stroke="#d4a5a5" stroke-width="1.2" opacity="0.5"/>
+                    <line x1="92" y1="238" x2="100" y2="245" stroke="#d4a5a5" stroke-width="1" opacity="0.4"/>
+                    <line x1="108" y1="238" x2="100" y2="245" stroke="#d4a5a5" stroke-width="1" opacity="0.4"/>
+                </svg>
+            </div>
+            <div class="content">
+                <div class="name-row">
+                    <span class="name">吴海明</span>
+                    <span class="role-tag">CEO</span>
+                </div>
+                <div class="company">花生动画</div>
+                <div class="quote">
+                    用户的审美在提升，平台的要求在提升，你不提升，就会被甩开。未来的竞争，是<span class="highlight">综合能力的竞争</span>，不是单一环节的比拼。
+                </div>
+            </div>
+        </div>
+
+        <!-- 陈藜藜 - 创始人 女 -->
+        <div class="interview-card">
+            <div class="illustration">
+                <div class="illustration-bg"></div>
+                <div class="illustration-ring"></div>
+                <svg class="person-svg" viewBox="0 0 200 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- 女性创始人 -->
+                    <circle cx="100" cy="62" r="28" stroke="#c9a84c" stroke-width="1.5" fill="none" opacity="0.7"/>
+                    <path d="M72 92 L128 92 L135 135 L138 185 Q142 235 126 260 L74 260 Q58 235 62 185 L65 135 Z" stroke="#c9a84c" stroke-width="1.4" fill="none" opacity="0.6"/>
+                    <path d="M72 115 Q100 105 128 115" stroke="#c9a84c" stroke-width="1.2" opacity="0.5"/>
+                    <path d="M80 150 L120 150" stroke="#c9a84c" stroke-width="1" opacity="0.4"/>
+                    <!-- 画板 -->
+                    <rect x="73" y="210" width="54" height="35" rx="2" stroke="#d4a5a5" stroke-width="1" fill="none" opacity="0.5"/>
+                    <line x1="73" y1="220" x2="127" y2="220" stroke="#d4a5a5" stroke-width="0.8" opacity="0.4"/>
+                    <line x1="73" y1="230" x2="127" y2="230" stroke="#d4a5a5" stroke-width="0.8" opacity="0.4"/>
+                    <line x1="83" y1="240" x2="117" y2="240" stroke="#d4a5a5" stroke-width="0.8" opacity="0.4"/>
+                </svg>
+            </div>
+            <div class="content">
+                <div class="name-row">
+                    <span class="name">陈藜藜</span>
+                    <span class="role-tag">创始人</span>
+                </div>
+                <div class="company">光衍映画</div>
+                <div class="quote">
+                    AI降低创作门槛，但<span class="highlight">创意、审美、合规</span>仍是硬门槛；没有内容能力，工具再强也没用。我们现在招聘，最看重的不是学历，而是<span class="highlight-gold">原创美术能力</span>、<span class="highlight-gold">视听语言功底</span>、<span class="highlight-gold">市场敏感度</span>。
+                </div>
+            </div>
+        </div>
+
+        <!-- 张维 - 副教授 男 -->
+        <div class="interview-card">
+            <div class="illustration">
+                <div class="illustration-bg"></div>
+                <div class="illustration-ring"></div>
+                <svg class="person-svg" viewBox="0 0 200 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- 男性学者 -->
+                    <circle cx="100" cy="63" r="31" stroke="#c9a84c" stroke-width="1.5" fill="none" opacity="0.7"/>
+                    <path d="M73 93 L127 93 L134 145 L137 195 Q141 240 129 260 L71 260 Q59 240 63 195 L66 145 Z" stroke="#c9a84c" stroke-width="1.4" fill="none" opacity="0.6"/>
+                    <line x1="100" y1="93" x2="100" y2="130" stroke="#c9a84c" stroke-width="1.2" opacity="0.4"/>
+                    <line x1="80" y1="140" x2="120" y2="140" stroke="#c9a84c" stroke-width="1" opacity="0.4"/>
+                    <!-- 书本 -->
+                    <rect x="78" y="218" width="44" height="22" rx="2" stroke="#d4a5a5" stroke-width="1" fill="none" opacity="0.5"/>
+                    <line x1="83" y1="226" x2="117" y2="226" stroke="#d4a5a5" stroke-width="0.8" opacity="0.4"/>
+                    <line x1="83" y1="234" x2="117" y2="234" stroke="#d4a5a5" stroke-width="0.8" opacity="0.4"/>
+                    <path d="M78 218 Q100 213 122 218" stroke="#d4a5a5" stroke-width="0.8" fill="none" opacity="0.4"/>
+                </svg>
+            </div>
+            <div class="content">
+                <div class="name-row">
+                    <span class="name">张维</span>
+                    <span class="role-tag">副教授</span>
+                </div>
+                <div class="company">中国传媒大学 · 动画学院</div>
+                <div class="quote">
+                    未来一到两年，这个行业会快速升级。真正的AI漫剧，必须具备完整的<span class="highlight">视听语言</span>：景别、运镜、转场、光影、配乐、表演层次、情绪递进，这些缺一不可。这才是专业门槛，也是未来院校培养、行业竞争的核心。<span class="highlight-gold">技术只是基础，内容表达、艺术审美、叙事能力，才是决定一个团队能走多远的关键。</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 赵晖 - 学者 女 -->
+        <div class="interview-card">
+            <div class="illustration">
+                <div class="illustration-bg"></div>
+                <div class="illustration-ring"></div>
+                <svg class="person-svg" viewBox="0 0 200 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- 女性学者 -->
+                    <circle cx="100" cy="60" r="27" stroke="#c9a84c" stroke-width="1.5" fill="none" opacity="0.7"/>
+                    <path d="M70 90 L130 90 L136 130 L140 180 Q144 235 125 260 L75 260 Q56 235 60 180 L64 130 Z" stroke="#c9a84c" stroke-width="1.4" fill="none" opacity="0.6"/>
+                    <path d="M70 112 Q100 102 130 112" stroke="#c9a84c" stroke-width="1.2" opacity="0.5"/>
+                    <line x1="82" y1="148" x2="118" y2="148" stroke="#c9a84c" stroke-width="1" opacity="0.4"/>
+                    <!-- 灯泡 -->
+                    <circle cx="100" cy="222" r="16" stroke="#d4a5a5" stroke-width="1" fill="none" opacity="0.5"/>
+                    <rect x="90" y="238" width="20" height="7" stroke="#d4a5a5" stroke-width="1" fill="none" opacity="0.5"/>
+                    <line x1="96" y1="245" x2="96" y2="250" stroke="#d4a5a5" stroke-width="0.8" opacity="0.4"/>
+                    <line x1="104" y1="245" x2="104" y2="250" stroke="#d4a5a5" stroke-width="0.8" opacity="0.4"/>
+                </svg>
+            </div>
+            <div class="content">
+                <div class="name-row">
+                    <span class="name">赵晖</span>
+                    <span class="role-tag">学者</span>
+                </div>
+                <div class="company">中国传媒大学 · 戏剧影视学院</div>
+                <div class="quote">
+                    在任何时代我们都离不开人的创意……人的创意发挥了从0.1的作用，但是一的附加值那可能是智能，就帮助我们快速的实现这个附加值。我们争论的不是技术仿不仿真的问题，而是你对于艺术有没有<span class="highlight">珍贵</span>的问题，能不能表现的东西有自己的<span class="highlight-gold">所感所思</span>在里面。
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        <p class="footer-text">
+            <span class="footer-gold">技术只是基础</span> · 内容表达、艺术审美、叙事能力，才是决定能走多远的关键
+        </p>
+    </footer>
+</body>
+</html>

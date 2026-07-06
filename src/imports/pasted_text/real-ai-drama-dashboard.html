@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>真人与AI短剧 — 两幕数据看板</title>
+    <script src="https://registry.npmmirror.com/echarts/5.5.0/files/dist/echarts.min.js"></script>
+    <!-- 国内备选：https://cdn.bootcdn.net/ajax/libs/echarts/5.5.0/echarts.min.js -->
+    <style>
+        :root {
+            --bg-color: #0a0612;
+            --card-bg: rgba(18, 10, 31, 0.85);
+            --text-primary: #f0e6d6;
+            --text-secondary: #8a7a94;
+            --accent-gold: #c9a457;
+            --accent-amber: #d98f22;
+            --accent-red: #d94a4a;
+            --accent-purple: #8b3a62;
+            --border-gold: rgba(201, 164, 87, 0.25);
+            --transition-speed: 0.55s;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            position: relative;
+            overflow: hidden;
+            height: 100vh; height: 100dvh;
+            user-select: none; -webkit-user-select: none;
+        }
+
+        /* 胶片颗粒噪点 */
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.06; pointer-events: none; z-index: 0;
+        }
+
+        .vignette {
+            position: fixed; inset: 0; pointer-events: none; z-index: 1;
+            background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.8) 100%);
+        }
+
+        /* ===== MAIN CONTAINER ===== */
+        .main-stage {
+            position: relative; z-index: 2;
+            display: flex; flex-direction: column;
+            height: 100vh; height: 100dvh;
+            padding: 24px 28px 80px;
+            overflow-y: auto;
+        }
+
+        /* ===== SLIDES ===== */
+        .slides-wrapper {
+            position: relative;
+            flex: 1;
+            display: flex; flex-direction: column;
+            justify-content: center;
+            min-height: 0;
+        }
+        .slide {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex; flex-direction: column;
+            justify-content: flex-start;
+            overflow-y: auto;
+            padding-top: 20px;
+            padding-bottom: 20px;
+            opacity: 0; transform: translateY(18px);
+            pointer-events: none;
+            transition: opacity var(--transition-speed) cubic-bezier(0.4,0,0.2,1),
+                        transform var(--transition-speed) cubic-bezier(0.4,0,0.2,1);
+            will-change: opacity, transform;
+        }
+        .slide.active {
+            opacity: 1; transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        /* ===== SECTION HEADER ===== */
+        .section-header {
+            text-align: center; margin-bottom: 16px;
+        }
+        .section-header h2 {
+            font-family: 'Georgia', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', serif;
+            font-size: 22px; font-weight: 900;
+            background: linear-gradient(135deg, #ffe08a 0%, var(--accent-gold) 40%, var(--accent-amber) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: 3px; margin-bottom: 6px;
+            filter: drop-shadow(0 0 8px rgba(201,164,87,0.3));
+        }
+        .section-header h2.red {
+            background: linear-gradient(135deg, #ff6b6b 0%, var(--accent-red) 40%, #f08080 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 8px rgba(217,74,74,0.3));
+        }
+        .section-header p {
+            color: var(--text-secondary); font-size: 11px; letter-spacing: 2px;
+        }
+
+        /* ===== KPI CARDS ===== */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* ===== 双栏对比布局 ===== */
+        .compare-layout {
+            display: flex;
+            gap: 28px;
+            height: 100%;
+            margin: 0 auto;
+            align-items: stretch;
+        }
+        .compare-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--card-bg);
+            border-radius: 6px;
+            padding: 22px 22px 24px;
+            border: 1px solid var(--border-gold);
+            justify-content: center;
+        }
+        .compare-panel.real  { border-top: 3px solid var(--accent-red); }
+        .compare-panel.ai    { border-top: 3px solid var(--accent-gold); }
+        .compare-panel .panel-title {
+            text-align: center;
+            font-family: 'Georgia', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', serif;
+            font-size: 22px; font-weight: 900;
+            letter-spacing: 3px;
+            margin-bottom: 6px;
+            text-shadow: 0 0 20px rgba(201,164,87,0.15);
+            position: relative;
+        }
+        .compare-panel.real .panel-title {
+            background: linear-gradient(135deg, #ff6b6b 0%, var(--accent-red) 40%, #f08080 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: none;
+            filter: drop-shadow(0 0 8px rgba(217,74,74,0.3));
+        }
+        .compare-panel.ai .panel-title {
+            background: linear-gradient(135deg, #ffe08a 0%, var(--accent-gold) 40%, var(--accent-amber) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: none;
+            filter: drop-shadow(0 0 8px rgba(201,164,87,0.3));
+        }
+        .compare-panel .panel-sub {
+            text-align: center;
+            color: var(--text-secondary); font-size: 11px; letter-spacing: 2px;
+            margin-bottom: 18px;
+            text-transform: uppercase;
+        }
+        .kpi-grid-2x2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 14px;
+            flex: 1;
+            align-content: center;
+        }
+        .kpi-grid-2x2 .kpi-card {
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 0;
+        }
+        .kpi-grid-2x2 .kpi-value {
+            font-size: 32px;
+        }
+        .kpi-grid-2x2 .kpi-label {
+            font-size: 11px; margin-bottom: 4px;
+        }
+        .kpi-grid-2x2 .kpi-sub {
+            font-size: 10px;
+        }
+        .kpi-grid-2x2 .kpi-tag {
+            font-size: 9px; padding: 2px 6px; margin-top: 6px;
+        }
+        .kpi-card {
+            background: var(--card-bg);
+            border-radius: 4px; padding: 14px 16px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.4);
+            border: 1px solid var(--border-gold);
+            border-left: 4px solid var(--accent-red);
+            transition: transform 0.25s, box-shadow 0.25s;
+        }
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(201,164,87,0.15);
+        }
+        .kpi-card.gold   { border-left-color: var(--accent-gold); }
+        .kpi-card.amber  { border-left-color: var(--accent-amber); }
+        .kpi-card.purple { border-left-color: var(--accent-purple); }
+
+        .kpi-label {
+            font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; letter-spacing: 0.5px;
+        }
+        .kpi-value {
+            font-family: 'Georgia', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', serif;
+            font-size: 28px; font-weight: 800; letter-spacing: -1px;
+            color: var(--accent-red);
+        }
+        .kpi-value.gold   { color: var(--accent-gold); }
+        .kpi-value.amber  { color: var(--accent-amber); }
+        .kpi-value.purple { color: var(--accent-purple); }
+
+        .kpi-sub {
+            font-size: 10px; color: var(--text-secondary); margin-top: 4px;
+        }
+        .kpi-tag {
+            display: inline-block; font-size: 9px; padding: 2px 6px; border-radius: 2px;
+            margin-top: 6px; font-weight: 600;
+        }
+        .tag-down {
+            background: rgba(217,74,74,0.15); color: var(--accent-red);
+            border: 1px solid rgba(217,74,74,0.3);
+        }
+        .tag-up {
+            background: rgba(217,143,34,0.15); color: var(--accent-amber);
+            border: 1px solid rgba(217,143,34,0.3);
+        }
+        .tag-hot {
+            background: rgba(139,58,98,0.2); color: #d4688e;
+            border: 1px solid rgba(139,58,98,0.4);
+        }
+
+        /* ===== CHART AREA (Slide 2) ===== */
+        .chart-wrapper {
+            max-width: 860px; margin: 0 auto; width: 100%;
+        }
+        .chart-card {
+            background: var(--card-bg);
+            border-radius: 4px; padding: 24px 24px 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.4);
+            border: 1px solid var(--border-gold);
+        }
+        .chart-card h3 {
+            font-size: 16px; font-weight: 600; margin-bottom: 14px;
+            color: var(--accent-gold); letter-spacing: 1px;
+        }
+        .chart-container { width: 100%; height: 440px; }
+
+        /* ===== LEFT / RIGHT NAV ARROWS ===== */
+        .nav-arrow {
+            position: fixed; top: 50%; transform: translateY(-50%);
+            z-index: 20;
+            width: 40px; height: 40px; border-radius: 50%;
+            border: 1px solid rgba(201, 164, 87, 0.35);
+            background: rgba(18,10,31,0.75);
+            color: rgba(201, 164, 87, 0.7);
+            font-size: 1.1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(6px);
+        }
+        .nav-arrow:hover {
+            border-color: var(--accent-gold); color: var(--accent-gold);
+            background: rgba(18,10,31,0.9);
+        }
+        .nav-arrow-left  { left: 16px; }
+        .nav-arrow-right { right: 16px; }
+
+        /* ===== CLICK HINT ===== */
+        .click-hint {
+            position: fixed; right: 28px; top: 50%; transform: translateY(-50%);
+            z-index: 15; pointer-events: none;
+            display: flex; align-items: center; gap: 0.4rem;
+            opacity: 0; transition: opacity 0.8s ease;
+        }
+        .click-hint.show { opacity: 0.45; }
+        .click-hint span {
+            font-size: 0.65rem; color: #8a7a94; letter-spacing: 0.1em;
+        }
+        .click-hint .chevron {
+            width: 6px; height: 6px;
+            border-right: 1.5px solid #8a7a94;
+            border-bottom: 1.5px solid #8a7a94;
+            transform: rotate(-45deg);
+            animation: hintPulse 2s ease-in-out infinite;
+        }
+        @keyframes hintPulse {
+            0%, 100% { opacity: 0.3; transform: rotate(-45deg) translateX(0); }
+            50% { opacity: 1; transform: rotate(-45deg) translateX(3px); }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .kpi-value { font-size: 22px; }
+            .compare-layout { flex-direction: column; gap: 16px; }
+            .compare-panel .panel-title { font-size: 18px; }
+            .kpi-grid-2x2 .kpi-value { font-size: 26px; }
+        }
+        @media (max-width: 600px) {
+            .main-stage { padding: 16px 12px 72px; }
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .kpi-card { padding: 10px 12px; }
+            .kpi-value { font-size: 20px; }
+            .chart-container { height: 260px; }
+            .section-header h2 { font-size: 16px; }
+            .compare-layout { gap: 12px; }
+            .compare-panel { padding: 12px 10px 14px; }
+            .compare-panel .panel-title { font-size: 15px; }
+            .kpi-grid-2x2 { gap: 8px; }
+            .kpi-grid-2x2 .kpi-value { font-size: 20px; }
+            .kpi-grid-2x2 .kpi-card { padding: 10px; }
+        }
+        /* ===== 金色边框 ===== */
+        .board-frame {
+            position: fixed;
+            top: 10px; left: 10px;
+            right: 10px; bottom: 10px;
+            z-index: 100;
+            pointer-events: none;
+            border-radius: 24px;
+            border: 2.5px solid rgba(245, 200, 66, 0.75);
+            box-shadow:
+                inset 0 0 60px rgba(245, 200, 66, 0.04),
+                0 0 30px rgba(245, 200, 66, 0.06),
+                0 0 2px rgba(245, 200, 66, 0.2);
+        }
+        .board-clip {
+            position: fixed;
+            left: 50%;
+            top: 8px;
+            transform: translateX(-50%);
+            z-index: 101;
+            pointer-events: none;
+            width: 200px;
+            height: 20px;
+            background: linear-gradient(180deg, rgba(245, 200, 66, 0.55) 0%, rgba(200, 160, 50, 0.40) 100%);
+            border: 1px solid rgba(245, 200, 66, 0.35);
+            border-radius: 6px 6px 3px 3px;
+            box-shadow: 0 2px 12px rgba(245, 200, 66, 0.15);
+            backdrop-filter: blur(6px);
+        }
+    </style>
+</head>
+<body>
+
+<div class="vignette"></div>
+<div class="board-frame"></div>
+<div class="board-clip"></div>
+
+<div class="click-hint show" id="clickHint">
+    <span>点击切换</span><div class="chevron"></div>
+</div>
+
+<div class="main-stage" id="mainStage">
+
+    <!-- ===== 第一幕：真人与AI短剧对比 ===== -->
+    <div class="slides-wrapper">
+        <article class="slide active" data-index="0" id="slide-compare">
+            <div class="compare-layout">
+                <!-- 左栏：真人短剧 -->
+                <div class="compare-panel real">
+                    <div class="panel-title">真人短剧行业运营难度持续加大</div>
+                    <div class="panel-sub">数据来源：QuestMobile 2026短剧行业洞察报告<br>2024年 – 2026年</div>
+                    <div class="kpi-grid-2x2">
+                        <div class="kpi-card">
+                            <div class="kpi-label">行业平均投资回报率 (ROI)</div>
+                            <div class="kpi-value">1.1</div>
+                            <div class="kpi-sub">从 1.2 持续下滑 · 逼近盈亏线</div>
+                            <span class="kpi-tag tag-down">📉 持续坠落</span>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">行业整体亏损率</div>
+                            <div class="kpi-value">90%</div>
+                            <div class="kpi-sub">仅 10% 项目实现盈利</div>
+                            <span class="kpi-tag tag-down">⚠️ 九死一生</span>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">头部公司单一赛道亏损</div>
+                            <div class="kpi-value">7亿</div>
+                            <div class="kpi-sub">高成本 + 低回报双重夹击</div>
+                            <span class="kpi-tag tag-down">🔥 巨额亏损</span>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">剧本过稿率（红果平台）</div>
+                            <div class="kpi-value">7.5%</div>
+                            <div class="kpi-sub">从 30% 断崖式下降</div>
+                            <span class="kpi-tag tag-down">🛑 急刹车</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- 右栏：AI短剧 -->
+                <div class="compare-panel ai">
+                    <div class="panel-title">AI短剧市场持续拓展</div>
+                    <div class="panel-sub">数据来源：QuestMobile 2026短剧行业洞察报告<br>2025.06 – 2026.01</div>
+                    <div class="kpi-grid-2x2">
+                        <div class="kpi-card gold">
+                            <div class="kpi-label">2026年1月 AI短剧总播放量</div>
+                            <div class="kpi-value gold">49.7亿</div>
+                            <div class="kpi-sub">环比增长</div>
+                            <span class="kpi-tag tag-hot">近2倍爆发式增长</span>
+                        </div>
+                        <div class="kpi-card gold">
+                            <div class="kpi-label">受众规模月复合增长率</div>
+                            <div class="kpi-value gold">≈12%</div>
+                            <div class="kpi-sub">2025.06 – 2025.12</div>
+                            <span class="kpi-tag tag-up">持续上升通道</span>
+                        </div>
+                        <div class="kpi-card gold">
+                            <div class="kpi-label">AI短剧月渗透率</div>
+                            <div class="kpi-value gold">36.8%</div>
+                            <div class="kpi-sub">2026年2月 · 含纯AI+AI辅助真人</div>
+                            <span class="kpi-tag tag-up">主流内容形态</span>
+                        </div>
+                        <div class="kpi-card gold">
+                            <div class="kpi-label">微短剧整体周渗透率</div>
+                            <div class="kpi-value gold">53.4%</div>
+                            <div class="kpi-sub">2026年1月 · 网民占比</div>
+                            <span class="kpi-tag tag-up">稳步提升</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <!-- ===== 第二幕：AI短剧增长趋势图 ===== -->
+        <article class="slide" data-index="1" id="slide-chart">
+            <div class="section-header">
+                <h2>AI短剧受众与播放量持续提升</h2>
+                <p>数据来源：QuestMobile 2026短剧行业洞察报告<br>2025年6月 – 2026年1月</p>
+            </div>
+            <div class="chart-wrapper">
+                <div class="chart-card">
+                    <div id="chart-growth" class="chart-container"></div>
+                </div>
+            </div>
+        </article>
+    </div>
+
+</div>
+
+<!-- ===== SIDE NAV ARROWS ===== -->
+<button class="nav-arrow nav-arrow-left" id="prevBtn" aria-label="上一幕" title="上一幕">◀</button>
+<button class="nav-arrow nav-arrow-right" id="nextBtn" aria-label="下一幕" title="下一幕">▶</button>
+
+<script>
+// ===== SLIDESHOW LOGIC =====
+(function() {
+    var slides = document.querySelectorAll('.slide');
+    var prevBtn = document.getElementById('prevBtn');
+    var nextBtn = document.getElementById('nextBtn');
+    var mainStage = document.getElementById('mainStage');
+    var clickHint = document.getElementById('clickHint');
+    var total = slides.length;
+    var current = 0;
+    var transitioning = false;
+
+    function updateNavVisibility() {
+        prevBtn.style.opacity = current === 0 ? '0' : '1';
+        prevBtn.style.pointerEvents = current === 0 ? 'none' : 'auto';
+    }
+
+    function goTo(idx) {
+        if (transitioning || idx === current || idx < 0 || idx >= total) return;
+        transitioning = true;
+        slides[current].classList.remove('active');
+        current = idx;
+        slides[current].classList.add('active');
+        clickHint.classList.remove('show');
+        updateNavVisibility();
+
+        setTimeout(function() { transitioning = false; }, 600);
+    }
+
+    function next() { goTo(current + 1); }
+    function prev() { goTo(current - 1); }
+
+    mainStage.addEventListener('click', function(e) {
+        if (e.target.closest('.nav-arrow')) return;
+        if (current < total - 1) next(); else goTo(0);
+    });
+
+    prevBtn.addEventListener('click', function(e) { e.stopPropagation(); prev(); });
+    nextBtn.addEventListener('click', function(e) { e.stopPropagation(); next(); });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+            e.preventDefault();
+            if (current < total - 1) next(); else goTo(0);
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            if (current > 0) { e.preventDefault(); prev(); }
+        }
+    });
+
+    updateNavVisibility();
+
+    setTimeout(function() { clickHint.classList.remove('show'); }, 4000);
+})();
+
+// ===== ECHARTS CHART =====
+(function() {
+    var dom = document.getElementById('chart-growth');
+    if (!dom) return;
+    var chart = echarts.init(dom);
+    chart.setOption({
+        backgroundColor: 'transparent',
+        tooltip: {
+            trigger: 'axis', axisPointer: { type: 'shadow' },
+            backgroundColor: 'rgba(18,10,31,0.9)', borderColor: '#c9a457',
+            textStyle: { color: '#f0e6d6', fontFamily: 'PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif' }
+        },
+        legend: {
+            data: ['受众规模指数', '播放量(亿)'], bottom: 0,
+            textStyle: { fontSize: 12, color: '#c9a457', fontFamily: 'PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif' }
+        },
+        grid: { left: '3%', right: '4%', bottom: '12%', top: '12%', containLabel: true },
+        xAxis: {
+            type: 'category',
+            data: ['2025.06','2025.07','2025.08','2025.09','2025.10','2025.11','2025.12','2026.01'],
+            axisLabel: { fontSize: 11, color: '#8a7a94' },
+            axisLine: { lineStyle: { color: 'rgba(201,164,87,0.3)' } }
+        },
+        yAxis: [
+            {
+                type: 'value', name: '受众指数',
+                nameTextStyle: { color: '#c9a457', fontFamily: 'PingFang SC, sans-serif' },
+                axisLabel: { fontSize: 11, color: '#8a7a94' },
+                splitLine: { lineStyle: { color: 'rgba(201,164,87,0.08)' } }
+            },
+            {
+                type: 'value', name: '播放量(亿)',
+                nameTextStyle: { color: '#c9a457', fontFamily: 'PingFang SC, sans-serif' },
+                axisLabel: { fontSize: 11, color: '#8a7a94' },
+                splitLine: { show: false }
+            }
+        ],
+        series: [
+            {
+                name: '受众规模指数', type: 'bar', barWidth: '35%',
+                itemStyle: {
+                    borderRadius: [2,2,0,0],
+                    color: new echarts.graphic.LinearGradient(0,0,0,1, [
+                        { offset: 0, color: '#8b3a62' }, { offset: 1, color: '#4a1a3a' }
+                    ])
+                },
+                data: [100,112,125,140,157,176,197,221]
+            },
+            {
+                name: '播放量(亿)', type: 'line', yAxisIndex: 1, smooth: true,
+                symbol: 'circle', symbolSize: 8,
+                lineStyle: { width: 3, color: '#d98f22' },
+                itemStyle: { color: '#d98f22' },
+                areaStyle: {
+                    color: new echarts.graphic.LinearGradient(0,0,0,1, [
+                        { offset: 0, color: 'rgba(217,143,34,0.25)' },
+                        { offset: 1, color: 'rgba(217,143,34,0.02)' }
+                    ])
+                },
+                data: [8.2,9.5,11.0,12.8,14.6,16.5,18.8,49.7],
+                markPoint: {
+                    data: [{ name: '爆发点', coord: ['2026.01',49.7], value: '49.7亿' }],
+                    itemStyle: { color: '#c9a457' },
+                    label: { fontSize: 10, fontWeight: 'bold', color: '#0a0612' }
+                }
+            }
+        ]
+    });
+
+    window.addEventListener('resize', function() { chart.resize(); });
+})();
+</script>
+
+</body>
+</html>

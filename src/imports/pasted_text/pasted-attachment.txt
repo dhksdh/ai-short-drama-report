@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI短剧题材全景分析仪表盘</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --night-purple: #2D1B4E;
+            --deep-purple: #1A0F2E;
+            --golden: #F5C842;
+            --golden-light: #FFE066;
+            --cream: #F5F0E8;
+            --slate: #3D3D3D;
+            --warm-gray: #8A8A8A;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', 'Noto Serif SC', sans-serif;
+            color: var(--cream);
+            background: linear-gradient(160deg, #0D0520 0%, #1A0F2E 25%, #2D1B4E 50%, #1A0F2E 75%, #0D0520 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* === 背景 === */
+        .bg-aura {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .bg-aura-1 {
+            width: 800px; height: 800px;
+            top: -30%; left: -20%;
+            background: radial-gradient(circle, rgba(245,200,66,0.10) 0%, rgba(245,200,66,0.03) 40%, transparent 70%);
+            animation: auraFloat 25s infinite ease-in-out;
+        }
+        .bg-aura-2 {
+            width: 600px; height: 600px;
+            bottom: -15%; right: -10%;
+            background: radial-gradient(circle, rgba(232,181,129,0.08) 0%, rgba(232,181,129,0.02) 40%, transparent 70%);
+            animation: auraFloat 20s infinite ease-in-out reverse;
+        }
+        @keyframes auraFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(40px, -60px) scale(1.08); }
+            66% { transform: translate(-30px, 40px) scale(0.94); }
+        }
+        .stars {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .star {
+            position: absolute;
+            border-radius: 50%;
+            background: white;
+            animation: twinkle 4s infinite ease-in-out;
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.15; transform: scale(1); }
+            50% { opacity: 0.9; transform: scale(1.6); }
+        }
+
+        /* === 主内容区 === */
+        .main-content {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 1320px;
+            padding: 2rem 20px 3rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 28px;
+        }
+
+        /* === 滚动条 === */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--golden); border-radius: 3px; }
+
+        /* === 仪表盘面板 === */
+        .db-panel {
+            width: 100%;
+            max-width: 1280px;
+            background: #0a0a14;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .db-panel .panel-title {
+            color: #F2EED8;
+            font-size: 22px;
+            font-weight: 700;
+            padding-left: 24px;
+            border-left: 4px solid #FFD02F;
+            margin-bottom: 6px;
+            font-family: 'Noto Serif SC', serif;
+        }
+        .db-panel .panel-subtitle {
+            color: rgba(242, 238, 216, 0.6);
+            font-size: 13px;
+            padding-left: 28px;
+            margin-bottom: 12px;
+            font-family: 'Noto Serif SC', serif;
+            line-height: 1.5;
+        }
+
+        /* 四象限气泡图 */
+        #chart-quadrant {
+            width: 100%;
+            height: 680px;
+        }
+        .data-source-bar {
+            width: 100%;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 32px;
+            border-top: 1px solid rgba(242,238,216,0.06);
+            padding: 0 20px;
+            font-family: 'Noto Serif SC', serif;
+            font-size: 11px;
+            color: rgba(242,238,216,0.35);
+            flex-wrap: wrap;
+        }
+        .data-source-bar span { white-space: nowrap; }
+        .data-source-bar .ds-tagscore {
+            color: #FFD02F;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        /* SVG 金字塔 */
+        .svg-wrap .db-svg { display: block; width: 100%; height: auto; }
+        .svg-wrap .layer {
+            cursor: pointer;
+            transition: filter 0.3s;
+        }
+        .svg-wrap .layer:hover {
+            filter: brightness(1.2) drop-shadow(0 0 18px rgba(255,208,47,0.5));
+        }
+        .svg-tooltip {
+            position: absolute;
+            pointer-events: none;
+            opacity: 0;
+            background: rgba(18, 10, 31, 0.97);
+            border: 1px solid #FFD02F;
+            border-radius: 6px;
+            padding: 14px 18px;
+            color: #F2EED8;
+            font-family: 'Noto Serif SC', serif;
+            font-size: 13px;
+            max-width: 320px;
+            z-index: 10;
+            transition: opacity 0.18s;
+        }
+        .svg-tooltip .t-name {
+            font-weight: 700;
+            font-size: 17px;
+            margin-bottom: 8px;
+        }
+        .svg-tooltip .t-cat {
+            font-size: 14px;
+            color: rgba(255,255,255,0.85);
+            margin-bottom: 6px;
+        }
+        .svg-tooltip .t-row {
+            margin: 4px 0;
+            color: rgba(242,238,216,0.75);
+        }
+        .svg-tooltip .t-note {
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            color: rgba(242,238,216,0.45);
+            font-size: 11px;
+            font-style: italic;
+        }
+
+        /* 核心结论面板 */
+        .conclusion-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 28px;
+            padding: 8px 0;
+        }
+        .conc-card {
+            width: 100%;
+            max-width: 1050px;
+            border-radius: 14px;
+            padding: 36px 48px;
+            font-family: 'Noto Serif SC', serif;
+            text-align: center;
+        }
+        .conc-card.card-primary {
+            background: linear-gradient(135deg, rgba(255,208,47,0.07), rgba(255,208,47,0.02));
+            border: 1px solid rgba(255,208,47,0.22);
+        }
+        .conc-card.card-secondary {
+            background: linear-gradient(135deg, rgba(255,87,34,0.06), rgba(255,87,34,0.01));
+            border: 1px solid rgba(255,87,34,0.18);
+        }
+        .conc-card .cc-headline {
+            font-size: 22px;
+            font-weight: 700;
+            color: #F2EED8;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        .conc-card .cc-headline .hl-gold { color: #FFD02F; }
+        .conc-card .cc-headline .hl-orange { color: #FF5722; }
+        .conc-card .cc-body {
+            font-size: 14px;
+            color: rgba(242,238,216,0.65);
+            line-height: 1.85;
+        }
+        .conc-card .cc-body .hl-gold { color: #FFD02F; font-weight: 700; }
+
+        /* 马太效应阶梯 */
+        .matthew-bar {
+            width: 100%;
+            max-width: 1050px;
+            display: flex;
+            align-items: stretch;
+            gap: 0;
+            border-radius: 12px;
+            overflow: hidden;
+            font-family: 'Noto Serif SC', serif;
+        }
+        .matthew-bar .mb-step {
+            flex: 1;
+            padding: 22px 14px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 6px;
+            position: relative;
+        }
+        .mb-step.mb-top {
+            background: linear-gradient(180deg, rgba(255,208,47,0.18), rgba(255,208,47,0.06));
+            border-right: 1px solid rgba(255,208,47,0.2);
+        }
+        .mb-step.mb-mid {
+            background: linear-gradient(180deg, rgba(255,87,34,0.14), rgba(255,87,34,0.04));
+            border-right: 1px solid rgba(255,87,34,0.15);
+        }
+        .mb-step.mb-bot {
+            background: linear-gradient(180deg, rgba(92,107,192,0.12), rgba(92,107,192,0.04));
+        }
+        .mb-step .mb-tier {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 3px;
+        }
+        .mb-top .mb-tier { color: #FFD02F; }
+        .mb-mid .mb-tier { color: #FF5722; }
+        .mb-bot .mb-tier { color: #5C6BC0; }
+        .mb-step .mb-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #F2EED8;
+        }
+        .mb-step .mb-desc {
+            font-size: 11px;
+            color: rgba(242,238,216,0.45);
+            line-height: 1.5;
+        }
+        .mb-step .mb-arrow {
+            font-size: 11px;
+            margin-top: 2px;
+        }
+        .mb-top .mb-arrow { color: rgba(255,208,47,0.45); }
+        .mb-mid .mb-arrow { color: rgba(255,87,34,0.40); }
+        .mb-bot .mb-arrow { color: rgba(92,107,192,0.35); }
+
+        /* === 网页外框 === */
+        .board-frame {
+            position: fixed;
+            top: 10px; left: 10px;
+            right: 10px; bottom: 10px;
+            z-index: 100;
+            pointer-events: none;
+            border-radius: 24px;
+            border: 2.5px solid rgba(245, 200, 66, 0.75);
+            box-shadow:
+                inset 0 0 60px rgba(245, 200, 66, 0.04),
+                0 0 30px rgba(245, 200, 66, 0.06),
+                0 0 2px rgba(245, 200, 66, 0.2);
+        }
+
+        .board-clip {
+            position: fixed;
+            left: 50%;
+            top: 8px;
+            transform: translateX(-50%);
+            z-index: 101;
+            pointer-events: none;
+            width: 200px;
+            height: 20px;
+            background: linear-gradient(180deg, rgba(245, 200, 66, 0.55) 0%, rgba(200, 160, 50, 0.40) 100%);
+            border: 1px solid rgba(245, 200, 66, 0.35);
+            border-radius: 6px 6px 3px 3px;
+            box-shadow: 0 2px 12px rgba(245, 200, 66, 0.15);
+            backdrop-filter: blur(6px);
+        }
+
+        /* === 右上角关闭按钮 === */
+        .btn-close {
+            position: fixed;
+            top: 22px;
+            right: 24px;
+            z-index: 102;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            background: rgba(245, 200, 66, 0.08);
+            border: 1.5px solid rgba(245, 200, 66, 0.45);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s;
+            color: rgba(245, 200, 66, 0.8);
+            font-size: 16px;
+            font-weight: 300;
+            line-height: 1;
+            user-select: none;
+        }
+        .btn-close:hover {
+            background: rgba(245, 200, 66, 0.18);
+            border-color: rgba(245, 200, 66, 0.8);
+            color: #FFD02F;
+            box-shadow: 0 0 16px rgba(245, 200, 66, 0.25);
+        }
+
+        @media (max-width: 1024px) {
+            #chart-quadrant { height: 420px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 网页外框 -->
+    <div class="board-frame"></div>
+    <div class="board-clip"></div>
+    <div class="btn-close" title="关闭">✕</div>
+
+    <!-- 背景 -->
+    <div class="bg-aura bg-aura-1"></div>
+    <div class="bg-aura bg-aura-2"></div>
+    <div class="stars" id="stars"></div>
+
+    <!-- ====== 主内容区 ====== -->
+    <div class="main-content">
+
+        <!-- ======== 面板1：四象限竞争格局 ======== -->
+        <div class="db-panel" id="panel1">
+            <div class="panel-title">内容赛道 · 竞争格局图谱</div>
+            <div class="panel-subtitle">横轴：普通剧占比 (%) → 纵轴：爆款剧占比 (%) ｜ 气泡大小：TagScore</div>
+            <div id="chart-quadrant"></div>
+            <div class="data-source-bar">
+                <span>数据来源：红果平台 300 部 AI 短剧标签与互动数据</span>
+                <span>|</span>
+                <span>TagScore 公式：<span class="ds-tagscore">爆款占比 ÷ 普通剧占比 × 100%</span></span>
+                <span>|</span>
+                <span>回归模型：控制互动指标后，识别各题材的促热 / 损热效应</span>
+            </div>
+        </div>
+
+        <!-- ======== 面板2：流量金字塔 ======== -->
+        <div class="db-panel svg-wrap" id="panel2">
+            <div class="panel-title">AI短剧题材 · 流量金字塔</div>
+            <div class="panel-subtitle">按「在播剧目数 · 播放增量 · 新剧贡献比」三维分层：越往上，流量集中度越高。体现为该区域内，头部剧集单部所能分配的平台总流量份额显著提升，市场资源分配两极分化愈发严重。</div>
+            <div class="svg-tooltip" id="svg-tooltip"></div>
+
+            <svg class="db-svg" viewBox="0 0 1240 755" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="qgrad0" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#FFD02F"/><stop offset="100%" stop-color="#B8901F"/>
+                    </linearGradient>
+                    <linearGradient id="qgrad1" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#FF5722"/><stop offset="100%" stop-color="#B83D17"/>
+                    </linearGradient>
+                    <linearGradient id="qgrad2" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#5C6BC0"/><stop offset="100%" stop-color="#3E4A8A"/>
+                    </linearGradient>
+                    <filter id="qglow0" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="rgba(255,208,47,0.25)"/>
+                    </filter>
+                    <filter id="qglow1" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="rgba(255,87,34,0.25)"/>
+                    </filter>
+                    <filter id="qglow2" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="rgba(92,107,192,0.25)"/>
+                    </filter>
+                </defs>
+                <polygon points="620.00,120  943.32,680  296.68,680" fill="none" stroke="rgba(242,238,216,0.12)" stroke-width="1" stroke-dasharray="6,4"/>
+                <polygon class="layer" filter="url(#qglow2)" data-index="2" points="404.46,493.33 835.54,493.33 943.32,680.00 296.68,680.00" fill="url(#qgrad2)" stroke="#0a0a14" stroke-width="4"/>
+                <polygon class="layer" filter="url(#qglow1)" data-index="1" points="512.23,306.67 727.77,306.67 835.54,493.33 404.46,493.33" fill="url(#qgrad1)" stroke="#0a0a14" stroke-width="4"/>
+                <polygon class="layer" filter="url(#qglow0)" data-index="0" points="620.00,120.00 620.00,120.00 727.77,306.67 512.23,306.67" fill="url(#qgrad0)" stroke="#0a0a14" stroke-width="4"/>
+                <line x1="727.77" y1="213.33" x2="774" y2="213.33" stroke="rgba(242,238,216,0.25)" stroke-width="1"/>
+                <circle cx="774" cy="213.33" r="3" fill="#FFD02F" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                <text x="784" y="200" fill="#FFD02F" font-size="18" font-weight="bold" font-family="Noto Serif SC" text-anchor="start" dominant-baseline="middle">爆款优势区</text>
+                <text x="784" y="227" fill="rgba(242,238,216,0.7)" font-size="13" font-family="Noto Serif SC" text-anchor="start" dominant-baseline="middle">逆袭</text>
+                <line x1="835.54" y1="400.00" x2="882" y2="400.00" stroke="rgba(242,238,216,0.25)" stroke-width="1"/>
+                <circle cx="882" cy="400.00" r="3" fill="#FF5722" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                <text x="892" y="387" fill="#FF5722" font-size="18" font-weight="bold" font-family="Noto Serif SC" text-anchor="start" dominant-baseline="middle">热门竞争区</text>
+                <text x="892" y="414" fill="rgba(242,238,216,0.7)" font-size="13" font-family="Noto Serif SC" text-anchor="start" dominant-baseline="middle">重生 · 系统 · 玄幻仙侠</text>
+                <line x1="943.32" y1="586.67" x2="990" y2="586.67" stroke="rgba(242,238,216,0.25)" stroke-width="1"/>
+                <circle cx="990" cy="586.67" r="3" fill="#5C6BC0" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                <text x="1000" y="573" fill="#5C6BC0" font-size="18" font-weight="bold" font-family="Noto Serif SC" text-anchor="start" dominant-baseline="middle">潜力题材区</text>
+                <text x="1000" y="600" fill="rgba(242,238,216,0.7)" font-size="13" font-family="Noto Serif SC" text-anchor="start" dominant-baseline="middle">穿越 · 都市 · 年代</text>
+                <text x="260" y="195" fill="rgba(242,238,216,0.3)" font-size="12" font-family="Noto Serif SC" text-anchor="start">
+                    <tspan x="260" dy="0">▲</tspan><tspan x="260" dy="18">向</tspan><tspan x="260" dy="18">上</tspan><tspan x="260" dy="18">流</tspan><tspan x="260" dy="18">量</tspan><tspan x="260" dy="18">集</tspan><tspan x="260" dy="18">中</tspan><tspan x="260" dy="18">度</tspan><tspan x="260" dy="18">递</tspan><tspan x="260" dy="18">增</tspan>
+                </text>
+                <text x="620" y="92" fill="#FFD02F" font-size="16" font-family="Noto Serif SC" text-anchor="middle">◆</text>
+            </svg>
+        </div>
+
+        <!-- ======== 面板3：核心结论 ======== -->
+        <div class="db-panel" id="panel3">
+            <div class="panel-title">核心结论 · 赛道趋势洞察</div>
+            <div class="panel-subtitle">基于题材竞争格局、流量金字塔与叙事效率的交叉分析</div>
+
+            <div class="conclusion-wrap">
+                <div class="conc-card card-primary">
+                    <div class="cc-headline">
+                        <span class="hl-gold">强情绪爽感叙事</span>仍是流量核心
+                    </div>
+                    <div class="cc-body">
+                        在最短时间内完成情绪唤起，在「打脸 — 成长 — 巅峰」的爽感递进曲线上持续供给，<span class="hl-gold">贴合观众即时情绪释放的需求</span>。
+                    </div>
+                </div>
+
+                <div class="conc-card card-secondary">
+                    <div class="cc-headline">
+                        越往金字塔塔尖走，<span class="hl-orange">马太效应</span>越明显
+                    </div>
+                    <div class="cc-body">
+                        流量金字塔的纵向分层揭示了一条清晰的竞争铁律：题材数量越少，头部剧集单部所能分配的平台总流量份额反而越大。塔尖区域的资源集聚效应与塔基区域的长尾分散格局形成鲜明对比——强者恒强，弱者只能在碎片化的流量缝隙中寻找生存空间。
+                    </div>
+                </div>
+
+                <div class="matthew-bar">
+                    <div class="mb-step mb-bot">
+                        <div class="mb-tier">塔 基</div>
+                        <div class="mb-name">多题材 · 长尾分散</div>
+                        <div class="mb-desc">题材众多，流量碎片化<br>单剧能分到的份额有限</div>
+                        <div class="mb-arrow">▼ 竞争烈度递增</div>
+                    </div>
+                    <div class="mb-step mb-mid">
+                        <div class="mb-tier">中 层</div>
+                        <div class="mb-name">三题材 · 稳固竞争</div>
+                        <div class="mb-desc">播放增量 100 亿级<br>新剧贡献比超 70%</div>
+                        <div class="mb-arrow">▼ 资源持续上移</div>
+                    </div>
+                    <div class="mb-step mb-top">
+                        <div class="mb-tier">塔 尖</div>
+                        <div class="mb-name">单一题材 · 流量垄断</div>
+                        <div class="mb-desc">9000+ 部在播 · 双榜第一<br>单剧分配份额显著领先</div>
+                        <div class="mb-arrow">★ 马太效应极致</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ===================== 星空 =====================
+        (function() {
+            var starsContainer = document.getElementById('stars');
+            for (var i = 0; i < 80; i++) {
+                var star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = star.style.height = (1 + Math.random() * 2) + 'px';
+                star.style.animationDelay = Math.random() * 4 + 's';
+                star.style.animationDuration = (2.5 + Math.random() * 4) + 's';
+                starsContainer.appendChild(star);
+            }
+        })();
+
+        // ===================== 面板1：四象限气泡图 =====================
+        (function() {
+            var chartDom = document.getElementById('chart-quadrant');
+            var chart1 = echarts.init(chartDom);
+
+            var rawData = [
+                { name: '逆袭', x: 38.2, y: 68.7, tagScore: 179.8 },
+                { name: '脑洞', x: 31.8, y: 51.4, tagScore: 161.6 },
+                { name: '系统', x: 21.1, y: 39.2, tagScore: 185.8 },
+                { name: '穿越', x: 49.3, y: 40.8, tagScore: 82.8 },
+                { name: '玄幻', x: 8.1, y: 31.1, tagScore: 384.0 },
+                { name: '异能', x: 11.9, y: 19.3, tagScore: 162.2 },
+                { name: '都市', x: 40.7, y: 20.6, tagScore: 50.6 },
+                { name: '年代', x: 0.0, y: 19.7, tagScore: 500.0 },
+                { name: '异界', x: 7.1, y: 10.5, tagScore: 147.9 },
+                { name: '重生', x: 24.4, y: 9.4, tagScore: 38.5 },
+                { name: '乡村', x: 2.9, y: 10.2, tagScore: 351.7 },
+                { name: '搞笑', x: 4.7, y: 9.6, tagScore: 204.3 },
+                { name: '悬疑', x: 10.4, y: 9.8, tagScore: 94.2 },
+                { name: '古代', x: 13.0, y: 10.3, tagScore: 79.2 },
+                { name: '恋爱', x: 26.5, y: 4.8, tagScore: 18.1 },
+                { name: '剧情', x: 12.8, y: 3.5, tagScore: 27.3 },
+                { name: '末世', x: 13.5, y: 4.2, tagScore: 31.1 },
+                { name: '反转', x: 10.6, y: 2.8, tagScore: 26.4 },
+                { name: '校园', x: 10.1, y: 3.2, tagScore: 31.7 },
+                { name: '架空', x: 7.8, y: 2.5, tagScore: 32.1 },
+                { name: '豪门', x: 7.5, y: 2.2, tagScore: 29.3 },
+                { name: '奇幻', x: 7.9, y: 2.6, tagScore: 32.9 },
+                { name: '职场', x: 4.8, y: 2.0, tagScore: 41.7 },
+                { name: '总裁', x: 4.5, y: 2.1, tagScore: 46.7 },
+                { name: '科幻', x: 4.9, y: 2.3, tagScore: 46.9 }
+            ];
+
+            var scatterData = rawData.map(function(item) {
+                return { name: item.name, value: [item.x, item.y, item.tagScore] };
+            });
+
+            var minScore = 18, maxScore = 500, minSize = 24, maxSize = 52;
+            function calcSize(score) {
+                var s = minSize + (score - minScore) / (maxScore - minScore) * (maxSize - minSize);
+                return Math.max(minSize, Math.min(maxSize, s));
+            }
+
+            chart1.setOption({
+                backgroundColor: '#0a0a14',
+                grid: { left: '8%', right: '8%', top: '12%', bottom: '12%', containLabel: false },
+                xAxis: {
+                    type: 'value', name: '普通剧占比 (%)', nameLocation: 'middle', nameGap: 35,
+                    min: 0, max: 55,
+                    axisLine: { lineStyle: { color: 'rgba(255,255,255,0.15)' } },
+                    splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)', type: 'dashed' } },
+                    axisLabel: { color: 'rgba(240,230,214,0.5)', fontSize: 11 }
+                },
+                yAxis: {
+                    type: 'value', name: '爆款剧占比 (%)', nameLocation: 'middle', nameGap: 45,
+                    min: 0, max: 75,
+                    axisLine: { lineStyle: { color: 'rgba(255,255,255,0.15)' } },
+                    splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)', type: 'dashed' } },
+                    axisLabel: { color: 'rgba(240,230,214,0.5)', fontSize: 11 }
+                },
+                tooltip: {
+                    trigger: 'item',
+                    backgroundColor: 'rgba(18, 10, 31, 0.96)',
+                    borderColor: '#FFD02F', borderWidth: 1, padding: [12, 16],
+                    textStyle: { color: '#F2EED8', fontSize: 12, fontFamily: 'Noto Serif SC' },
+                    formatter: function(params) {
+                        var d = params.data;
+                        return '<div style="font-weight:700;color:#FFD02F;margin-bottom:6px;">' + d.name + '</div>' +
+                            '<div style="display:flex;justify-content:space-between;"><span>普通剧占比</span><b>' + d.value[0].toFixed(1) + '%</b></div>' +
+                            '<div style="display:flex;justify-content:space-between;"><span>爆款剧占比</span><b>' + d.value[1].toFixed(1) + '%</b></div>' +
+                            '<div style="margin-top:6px;border-top:1px solid rgba(255,255,255,0.08);padding-top:4px;"><span>TagScore</span> <b>' + d.value[2] + '</b></div>';
+                    }
+                },
+                series: [
+                    {
+                        type: 'scatter', data: scatterData,
+                        symbolSize: function(val) { return calcSize(val[2]); },
+                        itemStyle: {
+                            borderColor: 'rgba(255,255,255,0.3)', borderWidth: 1, opacity: 0.92,
+                            color: function(params) {
+                                var x = params.value[0], y = params.value[1];
+                                if (x < 25 && y >= 25) return '#FFD02F';
+                                if (x >= 25 && y >= 25) return '#FF5722';
+                                if (x < 25 && y < 25) return '#5C6BC0';
+                                return '#26A69A';
+                            }
+                        },
+                        label: {
+                            show: true, position: 'inside', color: '#fff', fontSize: 11, fontWeight: 'bold',
+                            formatter: function(p) { return p.name; }
+                        },
+                        labelLayout: { hideOverlap: true, moveOverlap: 'shiftY' },
+                        emphasis: {
+                            focus: 'self',
+                            itemStyle: { opacity: 1, shadowBlur: 30, shadowColor: 'rgba(255,193,7,0.6)', borderColor: '#fff', borderWidth: 2 },
+                            label: { show: true, fontSize: 13, position: 'inside' }
+                        }
+                    },
+                    {
+                        type: 'scatter', data: [],
+                        markArea: {
+                            silent: true,
+                            data: [
+                                [{ xAxis: 0, yAxis: 25,
+                                    itemStyle: { color: 'rgba(255,208,47,0.18)', borderColor: 'rgba(255,208,47,0.5)', borderWidth: 1 },
+                                    label: { show: true, position: 'insideTopLeft', color: '#FFD02F', fontSize: 16, fontWeight: 'bold', fontFamily: 'Noto Serif SC', formatter: '爆款优势区' }
+                                }, { xAxis: 25, yAxis: 75 }],
+                                [{ xAxis: 25, yAxis: 25,
+                                    itemStyle: { color: 'rgba(255,87,34,0.18)', borderColor: 'rgba(255,87,34,0.5)', borderWidth: 1 },
+                                    label: { show: true, position: 'insideTopRight', color: '#FF5722', fontSize: 16, fontWeight: 'bold', fontFamily: 'Noto Serif SC', formatter: '热门竞争区' }
+                                }, { xAxis: 55, yAxis: 75 }],
+                                [{ xAxis: 0, yAxis: 0,
+                                    itemStyle: { color: 'rgba(92,107,192,0.18)', borderColor: 'rgba(92,107,192,0.5)', borderWidth: 1 },
+                                    label: { show: true, position: 'insideBottomLeft', color: '#5C6BC0', fontSize: 16, fontWeight: 'bold', fontFamily: 'Noto Serif SC', formatter: '边缘题材区' }
+                                }, { xAxis: 25, yAxis: 25 }],
+                                [{ xAxis: 25, yAxis: 0,
+                                    itemStyle: { color: 'rgba(38,166,154,0.18)', borderColor: 'rgba(38,166,154,0.5)', borderWidth: 1 },
+                                    label: { show: true, position: 'insideBottomRight', color: '#26A69A', fontSize: 16, fontWeight: 'bold', fontFamily: 'Noto Serif SC', formatter: '同质陷阱区' }
+                                }, { xAxis: 55, yAxis: 25 }]
+                            ]
+                        }
+                    }
+                ],
+                animationDuration: 900,
+                animationEasing: 'cubicOut'
+            });
+
+            window.addEventListener('resize', function() { chart1.resize(); });
+        })();
+
+        // ===================== 面板2：金字塔 SVG 交互 =====================
+        (function() {
+            var tooltipEl = document.getElementById('svg-tooltip');
+            var panel2    = document.getElementById('panel2');
+            var layers = panel2.querySelectorAll('.layer');
+
+            var data = [
+                {
+                    color: '#FFD02F', name: '爆款优势区', cat: '逆袭',
+                    threshold: '分层依据：新剧播放贡献 >75%，剧目数与播放量双榜第一',
+                    desc1: '约 9,000+ 部在播 · 新剧播放贡献超 75%',
+                    desc2: '剧目数量与总播放量双榜第一',
+                    desc3: '① 单一题材垄断流量高地  ② 几乎适配所有时代、角色与受众背景',
+                    desc4: '→ 流量集中度最高，题材数最少（仅1个）'
+                },
+                {
+                    color: '#FF5722', name: '热门竞争区', cat: '重生 · 系统 · 玄幻仙侠',
+                    threshold: '分层依据：新剧贡献比 >70%，播放增量均达 100 亿级',
+                    desc1: '播放增量均在 100 亿上下 · 新剧贡献比超 70%',
+                    desc2: '剧目数量与播放量稳定位居前列',
+                    desc3: '① 三题材共享中层流量  ② 承接头部溢出需求，形成稳固竞争群',
+                    desc4: '→ 流量集中度中等，题材数适中（3个）'
+                },
+                {
+                    color: '#5C6BC0', name: '潜力题材区', cat: '穿越 · 都市 · 年代',
+                    threshold: '分层依据：播放增量分散，新剧贡献比约 50%–65%',
+                    desc1: '题材各具垂直受众，长尾价值显著',
+                    desc2: '贡献基础播放底盘与生态多样性',
+                    desc3: '① 多题材分散流量  ② 长尾造血，为下一个爆款孵化土壤',
+                    desc4: '→ 流量集中度最低，题材数最多'
+                }
+            ];
+
+            layers.forEach(function(layer) {
+                layer.addEventListener('mouseenter', function() {
+                    var i = parseInt(layer.getAttribute('data-index'), 10);
+                    var d = data[i];
+                    tooltipEl.innerHTML =
+                        '<div class="t-name" style="color:' + d.color + '">' + d.name + '</div>' +
+                        '<div class="t-cat">' + d.cat + '</div>' +
+                        '<div class="t-row" style="color:rgba(255,208,47,0.65);font-size:12px;margin-bottom:6px;">' + d.threshold + '</div>' +
+                        '<div class="t-row">' + d.desc1 + '</div>' +
+                        '<div class="t-row">' + d.desc2 + '</div>' +
+                        '<div class="t-row">' + d.desc3 + '</div>' +
+                        '<div class="t-note">' + d.desc4 + '</div>';
+                    tooltipEl.style.opacity = 1;
+                });
+                layer.addEventListener('mousemove', function(e) {
+                    var rect = panel2.getBoundingClientRect();
+                    var x = e.clientX - rect.left + 18;
+                    var y = e.clientY - rect.top - 20;
+                    if (x + 320 > rect.width)  x = e.clientX - rect.left - 340;
+                    if (y < 10) y = 10;
+                    tooltipEl.style.left = x + 'px';
+                    tooltipEl.style.top  = y + 'px';
+                });
+                layer.addEventListener('mouseleave', function() {
+                    tooltipEl.style.opacity = 0;
+                });
+            });
+        })();
+    </script>
+</body>
+</html>
