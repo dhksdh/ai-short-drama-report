@@ -5,7 +5,8 @@ import { audioAssets } from "@/audio";
 
 import dreamOutro1Local from "../../imports/dream-outro-1.jpg";
 import dreamOutro2Local from "../../imports/dream-outro-2.jpg";
-const dreamStillUrl = "https://link.jiyiho.cn/orfile/view.php/be41d640288f8c1fe263b02a693d9b49.jpg";
+import dreamStillLocal from "../../imports/梦醒.png";
+const dreamStillUrl = dreamStillLocal;
 const dreamOutroFrame1 = dreamOutro1Local;
 const dreamOutroFrame2 = dreamOutro2Local;
 
