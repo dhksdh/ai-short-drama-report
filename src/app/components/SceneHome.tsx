@@ -127,7 +127,8 @@ export function SceneHome({ isActive }: { isActive?: boolean }) {
     const timers = [
       window.setTimeout(() => {
         setIntroStage(2);
-        playCameraClick();
+        // 延迟等图片渲染后再播咔嚓声，确保声画同步
+        window.setTimeout(() => playCameraClick(), 80);
       }, 1500),
       window.setTimeout(() => setIntroStage(3), 2500),
     ];

@@ -60,10 +60,12 @@ export function SceneDreamReveal({ isActive }: { isActive?: boolean }) {
   const [outroStage, setOutroStage] = useState<0 | 1 | 2>(0);
   const [showText, setShowText] = useState(false);
   const [showBlink, setShowBlink] = useState(false);
-  const [videoPlaying, setVideoPlaying] = useState(false);
+  const [videoVisible, setVideoVisible] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const blinkTimerRef = useRef<number | null>(null);
+  const prewarmedRef = useRef(false);
+  const frameReachedRef = useRef(false);
 
   useEffect(() => {
     if (!isActive) {
@@ -71,7 +73,9 @@ export function SceneDreamReveal({ isActive }: { isActive?: boolean }) {
       setOutroStage(0);
       setShowText(false);
       setShowBlink(false);
-      setVideoPlaying(false);
+      setVideoVisible(false);
+      prewarmedRef.current = false;
+      frameReachedRef.current = false;
       if (videoRef.current) {
         videoRef.current.pause();
         videoRef.current.currentTime = 0;
@@ -90,8 +94,34 @@ export function SceneDreamReveal({ isActive }: { isActive?: boolean }) {
     setFrame(0);
     setOutroStage(0);
     setShowText(false);
-    setVideoPlaying(false);
+    setVideoVisible(false);
+    prewarmedRef.current = false;
+    frameReachedRef.current = false;
     setShowBlink(true);
+
+    // 立即启动视频后台播放（opacity:0），给解码器预热时间
+    const video = videoRef.current;
+    if (video) {
+      video.muted = true;
+      video.playsInline = true;
+      video.currentTime = 0;
+      video.play().catch(() => {});
+      // 视频播完前如果还没揭晓，暂停并复位等待正式播放
+      const onPrewarmEnded = () => {
+        if (!frameReachedRef.current) {
+          video.pause();
+          video.currentTime = 0;
+          prewarmedRef.current = true;
+        }
+      };
+      video.addEventListener("ended", onPrewarmEnded, { once: true });
+      // 清理函数中会移除监听
+      const cleanupVideo = () => {
+        video.removeEventListener("ended", onPrewarmEnded);
+      };
+      // 保存清理引用
+      (video as any).__cleanupPrewarm = cleanupVideo;
+    }
 
     // 预加载音频
     const audio = new Audio(audioAssets.dreamReveal);
@@ -112,7 +142,10 @@ export function SceneDreamReveal({ isActive }: { isActive?: boolean }) {
     // 音频结束时：文字消失 → 进入 frame=1
     const onAudioEnded = () => {
       setShowText(false);
-      window.setTimeout(() => setFrame(1), 100);
+      window.setTimeout(() => {
+        frameReachedRef.current = true;
+        setFrame(1);
+      }, 100);
     };
     audio.addEventListener("ended", onAudioEnded, { once: true });
 
@@ -121,44 +154,21 @@ export function SceneDreamReveal({ isActive }: { isActive?: boolean }) {
       audio.removeEventListener("ended", onAudioEnded);
       audio.pause();
       audioRef.current = null;
+      if (video && (video as any).__cleanupPrewarm) {
+        (video as any).__cleanupPrewarm();
+        (video as any).__cleanupPrewarm = undefined;
+      }
     };
   }, [isActive]);
 
   useEffect(() => {
     if (frame === 1 && videoRef.current) {
       const video = videoRef.current;
-      video.muted = true;
-      video.playsInline = true;
+      // 解码器已被预热的视频播放过，seek 到开头重新播放近乎瞬间
       video.currentTime = 0;
-
-      const onPlaying = () => {
-        setVideoPlaying(true);
-        video.removeEventListener("playing", onPlaying);
-      };
-
-      // 如果视频已经在播放（罕见），直接标记
-      if (!video.paused && video.readyState >= 2) {
-        setVideoPlaying(true);
-      } else {
-        video.addEventListener("playing", onPlaying, { once: true });
-        video.play().catch(() => {
-          // 即使 play() 失败，也直接揭晓（不卡等待）
-          setVideoPlaying(true);
-        });
-        // 安全网：200ms 后无论如何都揭晓，不无限等 playing 事件
-        const safetyTimer = window.setTimeout(() => setVideoPlaying(true), 200);
-        const cleanup = () => window.clearTimeout(safetyTimer);
-        video.addEventListener("playing", cleanup, { once: true });
-        return () => {
-          video.removeEventListener("playing", onPlaying);
-          video.removeEventListener("playing", cleanup);
-          window.clearTimeout(safetyTimer);
-        };
-      }
-
-      return () => {
-        video.removeEventListener("playing", onPlaying);
-      };
+      video.play().catch(() => {});
+      // 立即显示——解码器已预热，不需要等 playing 事件
+      setVideoVisible(true);
     }
   }, [frame]);
 
@@ -192,22 +202,27 @@ export function SceneDreamReveal({ isActive }: { isActive?: boolean }) {
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-[#0D0A12]">
-      {/* Video always in DOM underneath — preloaded and ready, played via ref when frame=1 */}
+      {/* Video — plays hidden during blink/prewarm, becomes visible when frame=1 */}
       <video
         ref={videoRef}
         src={dreamVideoFile}
         muted
         playsInline
         preload="auto"
-        onEnded={handleVideoEnded}
-        className="absolute inset-0 h-full w-full object-cover"
+        onEnded={(e) => {
+          // 只有正式揭晓后的 ended 才触发 outro
+          if (frameReachedRef.current) {
+            handleVideoEnded(e);
+          }
+        }}
+        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${videoVisible ? "opacity-100" : "opacity-0"}`}
       />
 
-      {/* Image layered on top — fades out ONLY after video started playing, zero black gap */}
+      {/* Image layered on top — fades out instantly when video becomes visible */}
       <motion.div
         className="absolute inset-0"
-        animate={{ opacity: videoPlaying ? 0 : 1 }}
-        transition={{ duration: 0.45, ease: "easeInOut" }}
+        animate={{ opacity: videoVisible ? 0 : 1 }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
       >
         <img
           src={dreamStillUrl}

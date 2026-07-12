@@ -92,7 +92,10 @@ export function ScenePrologue({ isActive }: { isActive?: boolean }) {
     if (!audio) return;
     if (isActive && current === 0) {
       audio.muted = isMuted;
-      if (audio.paused) audio.play().catch(() => {});
+      audio.currentTime = 0;
+      // 延迟等图片入场动画完成后再播音频
+      const timer = window.setTimeout(() => audio.play().catch(() => {}), 350);
+      return () => window.clearTimeout(timer);
     } else {
       audio.pause();
     }
@@ -103,7 +106,9 @@ export function ScenePrologue({ isActive }: { isActive?: boolean }) {
     if (!audio2) return;
     if (isActive && current === 1) {
       audio2.muted = isMuted;
-      if (audio2.paused) audio2.play().catch(() => {});
+      audio2.currentTime = 0;
+      const timer = window.setTimeout(() => audio2.play().catch(() => {}), 350);
+      return () => window.clearTimeout(timer);
     } else {
       audio2.pause();
     }
@@ -114,7 +119,9 @@ export function ScenePrologue({ isActive }: { isActive?: boolean }) {
     if (!audio3) return;
     if (isActive && current === 3) {
       audio3.muted = isMuted;
-      if (audio3.paused) audio3.play().catch(() => {});
+      audio3.currentTime = 0;
+      const timer = window.setTimeout(() => audio3.play().catch(() => {}), 350);
+      return () => window.clearTimeout(timer);
     } else {
       audio3.pause();
     }
