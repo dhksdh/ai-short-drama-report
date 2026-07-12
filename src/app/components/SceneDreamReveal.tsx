@@ -60,6 +60,7 @@ export function SceneDreamReveal({ isActive }: { isActive?: boolean }) {
   const [outroStage, setOutroStage] = useState<0 | 1 | 2>(0);
   const [showText, setShowText] = useState(false);
   const [showBlink, setShowBlink] = useState(false);
+  const [videoPlaying, setVideoPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const blinkTimerRef = useRef<number | null>(null);
@@ -70,6 +71,7 @@ export function SceneDreamReveal({ isActive }: { isActive?: boolean }) {
       setOutroStage(0);
       setShowText(false);
       setShowBlink(false);
+      setVideoPlaying(false);
       if (videoRef.current) {
         videoRef.current.pause();
         videoRef.current.currentTime = 0;
@@ -88,6 +90,7 @@ export function SceneDreamReveal({ isActive }: { isActive?: boolean }) {
     setFrame(0);
     setOutroStage(0);
     setShowText(false);
+    setVideoPlaying(false);
     setShowBlink(true);
 
     // 预加载音频
@@ -127,17 +130,34 @@ export function SceneDreamReveal({ isActive }: { isActive?: boolean }) {
       video.muted = true;
       video.playsInline = true;
       video.currentTime = 0;
-      video.load();
-      const tryPlay = () => video.play().catch(() => undefined);
-      if (video.readyState >= 2) {
-        tryPlay();
+
+      const onPlaying = () => {
+        setVideoPlaying(true);
+        video.removeEventListener("playing", onPlaying);
+      };
+
+      // 如果视频已经在播放（罕见），直接标记
+      if (!video.paused && video.readyState >= 2) {
+        setVideoPlaying(true);
       } else {
-        video.addEventListener("loadeddata", tryPlay, { once: true });
-        video.addEventListener("canplay", tryPlay, { once: true });
+        video.addEventListener("playing", onPlaying, { once: true });
+        video.play().catch(() => {
+          // 即使 play() 失败，也直接揭晓（不卡等待）
+          setVideoPlaying(true);
+        });
+        // 安全网：200ms 后无论如何都揭晓，不无限等 playing 事件
+        const safetyTimer = window.setTimeout(() => setVideoPlaying(true), 200);
+        const cleanup = () => window.clearTimeout(safetyTimer);
+        video.addEventListener("playing", cleanup, { once: true });
+        return () => {
+          video.removeEventListener("playing", onPlaying);
+          video.removeEventListener("playing", cleanup);
+          window.clearTimeout(safetyTimer);
+        };
       }
+
       return () => {
-        video.removeEventListener("loadeddata", tryPlay);
-        video.removeEventListener("canplay", tryPlay);
+        video.removeEventListener("playing", onPlaying);
       };
     }
   }, [frame]);
@@ -183,11 +203,11 @@ export function SceneDreamReveal({ isActive }: { isActive?: boolean }) {
         className="absolute inset-0 h-full w-full object-cover"
       />
 
-      {/* Image layered on top — fades out when frame=1, revealing video underneath without black gap */}
+      {/* Image layered on top — fades out ONLY after video started playing, zero black gap */}
       <motion.div
         className="absolute inset-0"
-        animate={{ opacity: frame === 0 ? 1 : 0 }}
-        transition={{ duration: frame === 1 ? 0.55 : 0, ease: "easeInOut" }}
+        animate={{ opacity: videoPlaying ? 0 : 1 }}
+        transition={{ duration: 0.45, ease: "easeInOut" }}
       >
         <img
           src={dreamStillUrl}
