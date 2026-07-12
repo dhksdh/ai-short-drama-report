@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-const homeCover = "https://www.image2url.com/r2/default/files/1782961960073-5220c4e6-846a-442a-aeea-1035ad8d9163.jpg";
-const introFrame1 = "https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEWVWhqQpawb8MRuk43DeVhbSBCLXVCNgACVykAAv6GGFYCHpw-vaTnmzwE.jpg";
-const introFrame2 = "https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEWVXRqQpgGEhAr99_E9mV51Y5EsveFSQACdCkAAv6GGFYm98i40YU8QjwE.jpg";
+import homeCoverLocal from "../../imports/home-cover.jpg";
+import introFrame1Local from "../../imports/home-intro-1.jpg";
+import introFrame2Local from "../../imports/home-intro-2.jpg";
+const homeCover = homeCoverLocal;
+const introFrame1 = introFrame1Local;
+const introFrame2 = introFrame2Local;
 
 const homeImageSources = [homeCover, introFrame1, introFrame2];
 

@@ -3,9 +3,11 @@ import { motion, AnimatePresence } from "motion/react";
 import dreamVideoFile from "../data/media/dream-reveal.mp4";
 import { audioAssets } from "@/audio";
 
+import dreamOutro1Local from "../../imports/dream-outro-1.jpg";
+import dreamOutro2Local from "../../imports/dream-outro-2.jpg";
 const dreamStillUrl = "https://link.jiyiho.cn/orfile/view.php/be41d640288f8c1fe263b02a693d9b49.jpg";
-const dreamOutroFrame1 = "https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEWVWhqQpawb8MRuk43DeVhbSBCLXVCNgACVykAAv6GGFYCHpw-vaTnmzwE.jpg";
-const dreamOutroFrame2 = "https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEWVXRqQpgGEhAr99_E9mV51Y5EsveFSQACdCkAAv6GGFYm98i40YU8QjwE.jpg";
+const dreamOutroFrame1 = dreamOutro1Local;
+const dreamOutroFrame2 = dreamOutro2Local;
 
 let dreamCameraAudioContext: AudioContext | null = null;
 function getDreamCameraAudioContext() {

@@ -1,7 +1,8 @@
 import React from "react";
 import { motion } from "motion/react";
+import reflectionLocal from "../../imports/reflection.jpg";
 
-const reflectionImage = "https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEWVolqQsjPbMXj67poaaoVq6XnNnNYVwAC8SoAAv6GGFbwGydL-AfpVDwE.png";
+const reflectionImage = reflectionLocal;
 
 export function SceneFinalReflection({ isActive }: { isActive?: boolean }) {
   return (

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import creditsLogoLocal from "../../imports/credits-logo.png";
 
 import img1 from "../../imports/credit1.jpg";
 import img2 from "../../imports/credit2.jpg";
@@ -158,7 +159,7 @@ export function SceneCredits() {
                 <div>202301073041@cuc.edu.cn</div>
               </div>
               <img
-                src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEWbudqRNpcJ3UHspBhZkKtXcXzGEuiigACqC8AAgNwKVZj61c4x9CvejwE.png"
+                src={creditsLogoLocal}
                 alt="机构标识"
                 className="w-[45%] object-contain"
               />
