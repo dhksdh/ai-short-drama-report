@@ -167,7 +167,7 @@ export function Root() {
       <div className="letterbox opacity-30" />
 
       {/* Camera Viewfinder Details */}
-      <div className="pointer-events-none fixed inset-10 z-[70] opacity-40">
+      <div className="pointer-events-none fixed inset-10 z-[70] opacity-40 hidden sm:block">
         <div className="absolute top-0 left-0 flex flex-col gap-1">
           <div className="h-[1px] w-6 bg-primary" />
           <div className="h-6 w-[1px] bg-primary" />
@@ -210,18 +210,18 @@ export function Root() {
       />
 
       {/* Side Dot Navigation */}
-      <nav className="fixed right-6 top-1/2 z-[60] flex -translate-y-1/2 flex-col gap-5">
+      <nav className="fixed right-2 sm:right-6 top-1/2 z-[60] flex -translate-y-1/2 flex-col gap-3 sm:gap-5">
         {sections.map((section, index) => (
           <button
             key={section.id}
             onClick={() => scrollToSection(index)}
             className="group relative flex items-center justify-end outline-none"
           >
-            <span className={`mr-4 scale-0 font-serif text-[10px] tracking-[0.2em] uppercase text-primary transition-all duration-300 group-hover:scale-100 ${activeSection === index ? 'scale-100' : ''}`}>
+            <span className={`mr-2 sm:mr-4 scale-0 font-serif text-[9px] sm:text-[10px] tracking-[0.2em] uppercase text-primary transition-all duration-300 group-hover:scale-100 ${activeSection === index ? 'scale-100' : 'hidden sm:block sm:scale-0 sm:group-hover:scale-100'}`}>
               {section.label}
             </span>
             <div
-              className={`h-2.5 w-2.5 rounded-full border border-primary/40 transition-all duration-500 ${
+              className={`h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full border border-primary/40 transition-all duration-500 ${
                 activeSection === index ? "bg-primary scale-125 shadow-[0_0_12px_rgba(212,168,67,0.8)] border-primary" : "bg-transparent opacity-40 hover:opacity-100"
               }`}
             />
@@ -287,11 +287,11 @@ export function Root() {
       </div>
 
       {/* Corner Brackets Decorations */}
-      <div className="pointer-events-none fixed inset-6 z-[55] opacity-20">
-         <div className="absolute top-0 left-0 h-4 w-4 border-t border-l border-primary" />
-         <div className="absolute top-0 right-0 h-4 w-4 border-t border-r border-primary" />
-         <div className="absolute bottom-0 left-0 h-4 w-4 border-b border-l border-primary" />
-         <div className="absolute bottom-0 right-0 h-4 w-4 border-b border-r border-primary" />
+      <div className="pointer-events-none fixed inset-2 sm:inset-6 z-[55] opacity-20">
+         <div className="absolute top-0 left-0 h-3 w-3 sm:h-4 sm:w-4 border-t border-l border-primary" />
+         <div className="absolute top-0 right-0 h-3 w-3 sm:h-4 sm:w-4 border-t border-r border-primary" />
+         <div className="absolute bottom-0 left-0 h-3 w-3 sm:h-4 sm:w-4 border-b border-l border-primary" />
+         <div className="absolute bottom-0 right-0 h-3 w-3 sm:h-4 sm:w-4 border-b border-r border-primary" />
       </div>
 
       {/* Side Film Perforations */}

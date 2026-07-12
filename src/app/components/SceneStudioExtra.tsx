@@ -358,7 +358,7 @@ export function SceneStudioExtra({ isActive }: { isActive?: boolean }) {
                   <X size={18} />
                 </button>
               </div>
-              <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto p-5 md:grid-cols-2">
+              <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 sm:gap-4 overflow-y-auto p-3 sm:p-5 md:grid-cols-2">
                 {genderPreferenceImages.map((src, index) => (
                   <div key={src} className="relative min-h-[360px] overflow-hidden rounded-xl border border-white/10 bg-black/35 shadow-2xl">
                     <div className="absolute left-4 top-4 z-10 rounded-full border border-primary/30 bg-[#1A1225]/75 px-3 py-1 text-[10px] font-bold tracking-[0.25em] text-primary backdrop-blur-md">
@@ -401,24 +401,24 @@ export function SceneStudioExtra({ isActive }: { isActive?: boolean }) {
         />
       </div>
 
-      <div className="absolute top-10 left-10 z-30">
-        <h1 className="font-serif text-3xl font-black text-[#F0E6D6]">兴趣的流水线</h1>
+      <div className="absolute top-4 sm:top-10 left-4 sm:left-10 z-30">
+        <h1 className="font-serif text-xl sm:text-3xl font-black text-[#F0E6D6]">兴趣的流水线</h1>
       </div>
 
       <div className="absolute inset-0 z-0 opacity-40 grayscale pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-b from-[#2A1840]/80 to-transparent" />
       </div>
 
-      <div className="absolute inset-0 z-10 flex items-center justify-center gap-32 md:gap-80 pointer-events-none px-6">
-        <motion.div animate={{ opacity: currentScript.name === '贵哥' ? 1 : 0.25, scale: currentScript.name === '贵哥' ? 1.05 : 0.95 }} className="relative h-[450px] w-72 rounded-t-[160px] border-x border-t border-white/5 overflow-hidden">
+      <div className="absolute inset-0 z-10 flex items-center justify-center gap-8 sm:gap-32 md:gap-80 pointer-events-none px-2 sm:px-6">
+        <motion.div animate={{ opacity: currentScript.name === '贵哥' ? 1 : 0.25, scale: currentScript.name === '贵哥' ? 1.05 : 0.95 }} className="relative h-[240px] w-36 sm:h-[450px] sm:w-72 rounded-t-[80px] sm:rounded-t-[160px] border-x border-t border-white/5 overflow-hidden">
           <ImageWithFallback src={imgGui} alt="贵哥" className="h-full w-full object-cover filter brightness-[0.8]" />
         </motion.div>
-        <motion.div animate={{ opacity: currentScript.name === '林野' ? 1 : 0.25, scale: currentScript.name === '林野' ? 1.05 : 0.95 }} className="relative h-[450px] w-72 rounded-t-[160px] border-x border-t border-white/5 overflow-hidden">
+        <motion.div animate={{ opacity: currentScript.name === '林野' ? 1 : 0.25, scale: currentScript.name === '林野' ? 1.05 : 0.95 }} className="relative h-[240px] w-36 sm:h-[450px] sm:w-72 rounded-t-[80px] sm:rounded-t-[160px] border-x border-t border-white/5 overflow-hidden">
           <ImageWithFallback src={imgLin} alt="林野" className="h-full w-full object-cover filter brightness-[0.8]" />
         </motion.div>
       </div>
 
-      <div className="absolute bottom-24 left-1/2 -translate-x-1/2 w-full max-w-4xl px-8 z-40 flex items-end justify-between gap-6">
+      <div className="absolute bottom-4 sm:bottom-24 left-1/2 -translate-x-1/2 w-full max-w-4xl px-2 sm:px-8 z-40 flex items-end justify-between gap-2 sm:gap-6">
         <AnimatePresence>
           {step > 0 && (
             <motion.button
@@ -456,7 +456,7 @@ export function SceneStudioExtra({ isActive }: { isActive?: boolean }) {
             <div className="flex-1 space-y-2">
                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                     <h3 className={`font-serif text-lg font-bold tracking-widest ${currentScript.name === '林野' ? 'text-primary' : 'text-[#E67E22]'}`}>{currentScript.name}</h3>
+                     <h3 className={`font-serif text-sm sm:text-lg font-bold tracking-widest ${currentScript.name === '林野' ? 'text-primary' : 'text-[#E67E22]'}`}>{currentScript.name}</h3>
                   </div>
                   <div className="flex items-center gap-3">
                     {isActive && (

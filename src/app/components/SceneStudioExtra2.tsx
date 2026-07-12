@@ -423,26 +423,26 @@ export function SceneStudioExtra2({ isActive }: { isActive?: boolean }) {
         />
       </div>
 
-      <div className="absolute top-10 left-10 z-30">
-        <h1 className="font-serif text-3xl font-black text-[#F0E6D6]">审美的失乐园</h1>
+      <div className="absolute top-4 sm:top-10 left-4 sm:left-10 z-30">
+        <h1 className="font-serif text-xl sm:text-3xl font-black text-[#F0E6D6]">审美的失乐园</h1>
       </div>
 
       <div className="absolute inset-0 z-0 opacity-40 grayscale pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-b from-[#2A2A2D]/80 to-transparent" />
       </div>
 
-      <div className="absolute inset-0 z-10 flex items-center justify-center gap-32 md:gap-80 pointer-events-none">
-        <motion.div animate={{ opacity: currentScript.name === '贵哥' ? 1 : 0.2, scale: currentScript.name === '贵哥' ? 1.05 : 0.95 }} className="relative h-[450px] w-72 rounded-t-full overflow-hidden border border-white/5">
+      <div className="absolute inset-0 z-10 flex items-center justify-center gap-8 sm:gap-32 md:gap-80 pointer-events-none px-2 sm:px-0">
+        <motion.div animate={{ opacity: currentScript.name === '贵哥' ? 1 : 0.2, scale: currentScript.name === '贵哥' ? 1.05 : 0.95 }} className="relative h-[240px] w-36 sm:h-[450px] sm:w-72 rounded-t-full overflow-hidden border border-white/5">
           <ImageWithFallback src={imgGui} alt="贵哥" className="h-full w-full object-cover filter grayscale-[0.3]" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
         </motion.div>
-        <motion.div animate={{ opacity: currentScript.name === '林野' ? 1 : 0.2, scale: currentScript.name === '林野' ? 1.05 : 0.95 }} className="relative h-[450px] w-72 rounded-t-full overflow-hidden border border-white/5">
+        <motion.div animate={{ opacity: currentScript.name === '林野' ? 1 : 0.2, scale: currentScript.name === '林野' ? 1.05 : 0.95 }} className="relative h-[240px] w-36 sm:h-[450px] sm:w-72 rounded-t-full overflow-hidden border border-white/5">
           <ImageWithFallback src={imgLin} alt="林野" className="h-full w-full object-cover filter grayscale-[0.3]" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
         </motion.div>
       </div>
 
-      <div className="absolute bottom-24 left-1/2 -translate-x-1/2 w-full max-w-4xl px-8 z-40 flex items-center justify-between gap-6">
+      <div className="absolute bottom-4 sm:bottom-24 left-1/2 -translate-x-1/2 w-full max-w-4xl px-2 sm:px-8 z-40 flex items-center justify-between gap-2 sm:gap-6">
         <AnimatePresence>
           {step > 0 && (
             <motion.button onClick={handlePrev} className="h-12 w-12 flex items-center justify-center rounded-full border border-primary/10 text-primary hover:border-primary/40"><ChevronLeft size={24} /></motion.button>
@@ -536,7 +536,7 @@ export function SceneStudioExtra2({ isActive }: { isActive?: boolean }) {
               <div className="space-y-2 flex-1">
                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                       <h3 className={`font-serif text-lg font-bold tracking-widest ${currentScript.name === '林野' ? 'text-primary' : 'text-[#E67E22]'}`}>{currentScript.name}</h3>
+                       <h3 className={`font-serif text-sm sm:text-lg font-bold tracking-widest ${currentScript.name === '林野' ? 'text-primary' : 'text-[#E67E22]'}`}>{currentScript.name}</h3>
                     </div>
                     <div className="flex items-center gap-3">
                       {isActive && (

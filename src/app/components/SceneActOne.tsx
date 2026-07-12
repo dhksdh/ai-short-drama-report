@@ -335,7 +335,7 @@ export function SceneActOne({ isActive }: { isActive?: boolean }) {
   };
 
   return (
-    <div className="relative flex h-full w-full items-center justify-center bg-transparent px-6 lg:px-20 py-12">
+    <div className="relative flex h-full w-full items-center justify-center bg-transparent px-2 sm:px-6 lg:px-20 py-4 sm:py-12">
       <div
         className="pointer-events-none absolute h-0 w-0 overflow-hidden opacity-0"
         aria-hidden="true"
@@ -406,10 +406,10 @@ export function SceneActOne({ isActive }: { isActive?: boolean }) {
         <div className="absolute inset-10 border border-primary/5" />
       </div>
 
-      <div className="container relative z-10 flex h-full w-full max-w-7xl flex-col overflow-hidden border border-primary/15 bg-[#1A1225]/40 shadow-2xl backdrop-blur-3xl rounded-3xl md:flex-row">
+      <div className="container relative z-10 flex h-full w-full max-w-7xl flex-col overflow-hidden border border-primary/15 bg-[#1A1225]/40 shadow-2xl backdrop-blur-3xl rounded-xl sm:rounded-3xl md:flex-row">
         {/* Left: Image Section (75%) */}
         <div
-          className="relative flex-1 cursor-pointer overflow-hidden group md:w-3/4"
+          className="relative h-[35vh] sm:h-auto flex-1 cursor-pointer overflow-hidden group md:w-3/4"
           onClick={() => paginate(1)}
         >
           <AnimatePresence
@@ -524,7 +524,7 @@ export function SceneActOne({ isActive }: { isActive?: boolean }) {
         </div>
 
         {/* Right: Narration Section (25%) */}
-        <div className="flex w-full flex-col bg-gradient-to-b from-[#1A0A2E]/80 to-[#241245]/90 backdrop-blur-md md:w-[28%] border-l border-primary/5">
+        <div className="flex w-full flex-col bg-gradient-to-b from-[#1A0A2E]/80 to-[#241245]/90 backdrop-blur-md md:w-[28%] border-t md:border-t-0 md:border-l border-primary/5 max-h-[40vh] md:max-h-none overflow-y-auto">
           {/* Header */}
           <div className="p-8 pb-4 border-b border-primary/10 flex items-start justify-between">
             <h2 className="mt-2 font-serif text-3xl font-bold tracking-wider text-primary">

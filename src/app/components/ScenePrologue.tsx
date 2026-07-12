@@ -200,7 +200,7 @@ export function ScenePrologue({ isActive }: { isActive?: boolean }) {
   };
 
   return (
-    <div className="relative flex h-full w-full items-center justify-center bg-transparent px-6 lg:px-20 py-12">
+    <div className="relative flex h-full w-full items-center justify-center bg-transparent px-2 sm:px-6 lg:px-20 py-4 sm:py-12">
       <audio ref={audioRef} src={audioAssets.prologue[0]!} preload="auto" onError={() => setAudioFailed(true)} />
       <audio ref={audio2Ref} src={audioAssets.prologue[1]!} preload="auto" onError={() => setAudioFailed(true)} />
       <audio ref={audio3Ref} src={audioAssets.prologue[3]!} preload="auto" onError={() => setAudioFailed(true)} />
@@ -227,11 +227,11 @@ export function ScenePrologue({ isActive }: { isActive?: boolean }) {
         <div className="absolute inset-10 border border-primary/5" />
       </div>
 
-      <div className="container relative z-10 flex h-full w-full max-w-7xl flex-col overflow-hidden border border-primary/15 bg-[#1A1225]/40 shadow-2xl backdrop-blur-3xl rounded-3xl md:flex-row">
+      <div className="container relative z-10 flex h-full w-full max-w-7xl flex-col overflow-hidden border border-primary/15 bg-[#1A1225]/40 shadow-2xl backdrop-blur-3xl rounded-xl sm:rounded-3xl md:flex-row">
         
         {/* Left: Image Section (75%) */}
-        <div 
-          className={`relative flex-1 overflow-hidden group md:w-3/4 ${isHallucinating || isBlackout ? "cursor-default" : "cursor-pointer"}`}
+        <div
+          className={`relative h-[35vh] sm:h-auto flex-1 overflow-hidden group md:w-3/4 ${isHallucinating || isBlackout ? "cursor-default" : "cursor-pointer"}`}
           onClick={() => paginate(1)}
         >
           <AnimatePresence initial={false} custom={direction} mode="popLayout">
@@ -407,10 +407,10 @@ export function ScenePrologue({ isActive }: { isActive?: boolean }) {
         </div>
 
         {/* Right: Narration Section (25%) */}
-        <div className="flex w-full flex-col bg-gradient-to-b from-[#1A0A2E]/80 to-[#241245]/90 backdrop-blur-md md:w-[28%] border-l border-primary/5">
+        <div className="flex w-full flex-col bg-gradient-to-b from-[#1A0A2E]/80 to-[#241245]/90 backdrop-blur-md md:w-[28%] border-t md:border-t-0 md:border-l border-primary/5 max-h-[40vh] md:max-h-none overflow-y-auto">
            {/* Header */}
-           <div className={`${current === 1 ? "p-6 pb-3" : "p-8 pb-4"} border-b border-primary/10 flex items-start justify-between`}>
-              <h2 className={`${current === 1 ? "mt-1 text-2xl" : "mt-2 text-3xl"} font-serif font-bold tracking-wider text-primary`}>序幕</h2>
+           <div className={`${current === 1 ? "p-3 sm:p-6 pb-1 sm:pb-3" : "p-4 sm:p-8 pb-2 sm:pb-4"} border-b border-primary/10 flex items-start justify-between`}>
+              <h2 className={`${current === 1 ? "mt-0 sm:mt-1 text-xl sm:text-2xl" : "mt-0 sm:mt-2 text-2xl sm:text-3xl"} font-serif font-bold tracking-wider text-primary`}>序幕</h2>
               {isActive && (
                 <motion.button
                   initial={{ opacity: 0, scale: 0.8 }}
@@ -427,7 +427,7 @@ export function ScenePrologue({ isActive }: { isActive?: boolean }) {
            </div>
 
            {/* Content */}
-           <div className={`relative flex flex-1 flex-col ${current === 1 ? "justify-start overflow-y-auto p-6" : "justify-center overflow-hidden p-10"}`}>
+           <div className={`relative flex flex-1 flex-col ${current === 1 ? "justify-start overflow-y-auto p-3 sm:p-6" : "justify-center overflow-hidden p-4 sm:p-10"}`}>
               <AnimatePresence mode="wait">
                 <motion.div
                   key={current}
@@ -481,7 +481,7 @@ export function ScenePrologue({ isActive }: { isActive?: boolean }) {
            </div>
 
            {/* Footer / Indicator */}
-           <div className="p-8 pt-4 flex items-center justify-between border-t border-primary/10">
+           <div className="p-3 sm:p-8 pt-2 sm:pt-4 flex items-center justify-between border-t border-primary/10">
               <div className="flex gap-1.5">
                 {pages.map((_, idx) => (
                   <button
