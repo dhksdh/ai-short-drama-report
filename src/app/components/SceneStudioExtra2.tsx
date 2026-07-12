@@ -17,13 +17,18 @@ import cover3 from "../data/showcase-covers/cover3.txt?raw";
 import cover4 from "../data/showcase-covers/cover4.txt?raw";
 import cover5 from "../data/showcase-covers/cover5.txt?raw";
 import aiShortDramaReviewsHtml from "../../imports/pasted_text/ai-short-drama-reviews.html?raw";
+import gif1 from "../../imports/五个gif/斩仙台下_edited.gif";
+import gif2 from "../../imports/五个gif/有山灵_edited.gif";
+import gif3 from "../../imports/五个gif/太阳坠落之时_edited.gif";
+import gif4 from "../../imports/五个gif/新世界加载中_edited.gif";
+import gif5 from "../../imports/五个gif/风水天师_edited.gif";
 
 const showcaseData = [
-  { title: '斩仙台下，我震惊了诸神', subtitle: '漫谈动漫', stats: '播放量超10亿，抖音投流日耗破2000万', desc: 'AI仿真人画风重制漫剧爆款，动态镜头与粒子特效媲美真人剧。现代人穿越神话，因果编辑器颠覆封神叙事。', image: cover1, gif: 'https://www.image2url.com/r2/default/gifs/1782911219409-10aedffb-d5b2-4add-8dd6-0d6d1f122ae3.gif', tags: ['玄幻仙侠'], bg: '#75656E', descColor: '#FDF6E3' },
-  { title: '有山灵', subtitle: '与光同尘', stats: '播放量超千万，斩获尼泊尔国际电影节最佳AI影片奖', desc: '以《山海经》为蓝本，讲述小妖心性修炼，0手绘0三维0渲染，全AIGC国风制作，画面极具东方美学。', image: cover2, gif: 'https://www.image2url.com/r2/default/gifs/1782911318549-2cd2d533-957b-4de4-88b6-e1f9f2e1deef.gif', tags: ['志怪奇幻'], bg: '#5D4D56', descColor: '#F3E9C4' },
-  { title: '太阳坠落之时', subtitle: '悟空AI', stats: '全网播放量突破2000万', desc: '全流程AIGC制作，3个月完成30集，改编自星云奖科幻IP，涵盖50+角色、200余处场景，使用空间站化为轨道武器的宏大灾难设定。', image: cover3, gif: 'https://www.image2url.com/r2/default/gifs/1782911771029-9cf40a8e-ca43-469d-a079-dc25b13894f7.gif', tags: ['硬核科幻'], bg: '#4C3C49', descColor: '#E9DCA5' },
-  { title: '新世界加载中', subtitle: '异类工作室', stats: '全网曝光超13.7亿', desc: '7部单元剧横跨科幻/奇幻/荒诞喜剧/历史，画风从东方美学到赛博朋克自由切换。全球首部AI单元故事集，总长180分钟。', image: cover4, gif: 'https://www.image2url.com/r2/default/gifs/1782911384912-118d3ff6-cbbe-4a12-bbd4-fd4307a6eef5.gif', tags: ['多元幻想'], bg: '#3B2B38', descColor: '#DDD0A0' },
-  { title: '风水天师', subtitle: '时刻互动', stats: '第一季12小时破亿、累计近6亿', desc: '微表情细腻、斗法特效对标院线仙侠电影。唐季礼任总监制，第二季融入东北五仙传说，家国情怀升级。', image: cover5, gif: 'https://www.image2url.com/r2/default/gifs/1782912894529-a0904676-7152-4ed5-9acf-fb4150890585.gif', tags: ['玄幻民国'], bg: '#2A1A27', descColor: '#D1C495' },
+  { title: '斩仙台下，我震惊了诸神', subtitle: '漫谈动漫', stats: '播放量超10亿，抖音投流日耗破2000万', desc: 'AI仿真人画风重制漫剧爆款，动态镜头与粒子特效媲美真人剧。现代人穿越神话，因果编辑器颠覆封神叙事。', image: cover1, gif: gif1, tags: ['玄幻仙侠'], bg: '#75656E', descColor: '#FDF6E3' },
+  { title: '有山灵', subtitle: '与光同尘', stats: '播放量超千万，斩获尼泊尔国际电影节最佳AI影片奖', desc: '以《山海经》为蓝本，讲述小妖心性修炼，0手绘0三维0渲染，全AIGC国风制作，画面极具东方美学。', image: cover2, gif: gif2, tags: ['志怪奇幻'], bg: '#5D4D56', descColor: '#F3E9C4' },
+  { title: '太阳坠落之时', subtitle: '悟空AI', stats: '全网播放量突破2000万', desc: '全流程AIGC制作，3个月完成30集，改编自星云奖科幻IP，涵盖50+角色、200余处场景，使用空间站化为轨道武器的宏大灾难设定。', image: cover3, gif: gif3, tags: ['硬核科幻'], bg: '#4C3C49', descColor: '#E9DCA5' },
+  { title: '新世界加载中', subtitle: '异类工作室', stats: '全网曝光超13.7亿', desc: '7部单元剧横跨科幻/奇幻/荒诞喜剧/历史，画风从东方美学到赛博朋克自由切换。全球首部AI单元故事集，总长180分钟。', image: cover4, gif: gif4, tags: ['多元幻想'], bg: '#3B2B38', descColor: '#DDD0A0' },
+  { title: '风水天师', subtitle: '时刻互动', stats: '第一季12小时破亿、累计近6亿', desc: '微表情细腻、斗法特效对标院线仙侠电影。唐季礼任总监制，第二季融入东北五仙传说，家国情怀升级。', image: cover5, gif: gif5, tags: ['玄幻民国'], bg: '#2A1A27', descColor: '#D1C495' },
 ];
 
 function AiDramaShowcase({ onClose }: { onClose: () => void }) {
