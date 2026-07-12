@@ -12,6 +12,8 @@ import imgGui from "../../imports/b9e12d1e735ad5df9661ec895c84c088.jpg";
 import avatarGui from "../../imports/c9798d1fbc83b61645654e2f76bea038-1.jpg";
 import avatarLin from "../../imports/fa0706fed8fcda03e647959e2506d84b.jpg";
 import interestBackground from "../../imports/_____20260626110002_3487_383_compressed.jpg";
+import genderImage01 from "../../imports/男.jpg";
+import genderImage02 from "../../imports/女.png";
 import { audioAssets } from "../../audio";
 
 const audioUrls = audioAssets.extra;
@@ -69,8 +71,8 @@ const script = [
 ];
 
 const genderPreferenceImages = [
-  "https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEWfVFqRh7OMc88GlxnGIRD_ouRUZ4udAACPiwAAoFqMFbQuGQO-1Z4jzwE.jpg",
-  "https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEWgHtqRlYuGA5NwNTy7mmmvhUuFTqpXgACuCUAAoFqOFbA3MGvyyELMTwE.png",
+  genderImage01,
+  genderImage02,
 ];
 
 // 头像：丁宽 — 戴耳麦的导演造型
