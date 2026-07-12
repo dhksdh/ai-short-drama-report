@@ -24,13 +24,13 @@ const script = [
     name: '林野',
     avatar: avatarLin,
     text: '这些投诉...怎么搞的？我看了咱们的剧本，这里面设置的爽点是不是太多了？',
-    
+    color: '#D4A843'
   },
   {
     name: '林野',
     avatar: avatarLin,
     text: '我也明白需要调动情绪来留住观众，但是有些工业糖精也太毁三观了吧？肯定是AI生成的情节让观众误解了！',
-    
+    color: '#D4A843'
   },
   {
     name: '贵哥',
@@ -51,6 +51,7 @@ const script = [
     avatar: avatarLin,
     text: '所以，真正"有罪"的，是设计有毒的情节去操纵观众的人。设计者越有真情越有想法，技术越能放大感染力。',
     isPenultimate: true,
+    color: '#D4A843'
   },
   {
     name: '林野',

@@ -239,7 +239,12 @@ export function SceneActOne({ isActive }: { isActive?: boolean }) {
 
   // 每次翻到入梦界面，交互和音频从头开始
   useEffect(() => {
-    if (!isActive) return;
+    if (!isActive) {
+      // 离开第一幕时停止所有音频
+      audioLinRef.current?.pause();
+      audioLinRef.current = null;
+      return;
+    }
     setCurrent(0);
     setCurrentDialogue(0);
     // 仅当从序幕跳转（triggerTransition）时播放眨眼入场动画

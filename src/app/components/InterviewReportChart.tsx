@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
-import { ChevronLeft, Loader2 } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import interviewHtmlRaw from "../../imports/pasted_text/ai-short-drama-interview.html?raw";
 
 const injectedStyle = `
@@ -128,9 +128,9 @@ export function InterviewReportChart({ onClose, isOpen = true }: { onClose: () =
         <button
           type="button"
           onClick={onClose}
-          className="absolute left-6 top-6 z-[560] flex items-center gap-2 rounded-full border border-[#D4A843]/35 bg-[#111114]/85 px-4 py-2 text-xs font-bold tracking-widest text-[#D4A843] shadow-[0_0_24px_rgba(0,0,0,0.55)] backdrop-blur-md transition hover:bg-[#D4A843]/15"
+          className="absolute right-6 top-6 z-[560] flex h-10 w-10 items-center justify-center rounded-full border border-[#D4A843]/35 bg-[#111114]/85 text-[#D4A843] shadow-[0_0_24px_rgba(0,0,0,0.55)] backdrop-blur-md transition hover:bg-[#D4A843]/15"
         >
-          <ChevronLeft size={14} /> 跳转到对话
+          <X size={18} />
         </button>
       )}
       <iframe
