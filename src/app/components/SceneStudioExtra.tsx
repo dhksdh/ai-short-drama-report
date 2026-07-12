@@ -348,7 +348,7 @@ export function SceneStudioExtra({ isActive }: { isActive?: boolean }) {
                   <div className="mb-1 flex items-center gap-2 text-primary">
                     <VenusAndMars size={16} />
                   </div>
-                  <h2 className="font-serif text-2xl font-black text-[#F0E6D6]">男女频题材取向</h2>
+                  <h2 className="font-serif text-2xl font-black text-[#F0E6D6]">AI短剧男女形象特点</h2>
                 </div>
                 <button
                   type="button"
@@ -373,6 +373,9 @@ export function SceneStudioExtra({ isActive }: { isActive?: boolean }) {
                     />
                   </div>
                 ))}
+              </div>
+              <div className="px-5 pb-3 text-center">
+                <span className="text-[10px] tracking-wider text-white/35">数据来源：红果平台300AI部短剧简介</span>
               </div>
               <div className="flex justify-center border-t border-white/10 px-6 py-4">
                 <button
@@ -438,7 +441,7 @@ export function SceneStudioExtra({ isActive }: { isActive?: boolean }) {
           )}
           {isGenderPreferenceStep && !showGenderPreferenceReport && (
             <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-50">
-               <button onClick={(e) => { e.stopPropagation(); setShowGenderPreferenceReport(true); }} className="bg-primary/20 border border-primary/40 rounded-full px-6 py-1.5 text-primary text-[10px] font-bold tracking-widest uppercase flex items-center gap-2 hover:bg-primary/30"><VenusAndMars size={12} /> 点击查看男女频题材取向</button>
+               <button onClick={(e) => { e.stopPropagation(); setShowGenderPreferenceReport(true); }} className="bg-primary/20 border border-primary/40 rounded-full px-6 py-1.5 text-primary text-[10px] font-bold tracking-widest uppercase flex items-center gap-2 hover:bg-primary/30"><VenusAndMars size={12} /> 点击查看AI短剧男女形象特点</button>
             </div>
           )}
           {currentScript.showReportAction && !reportUnlocked && !showReport && (
