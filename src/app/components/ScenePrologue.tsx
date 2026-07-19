@@ -7,7 +7,7 @@ import img1 from "@/imports/1c92407f63f7eaf29e0cd8a8c1bdf60a.jpg";
 import img2 from "@/imports/____2.png";
 import img3 from "@/imports/____7.png";
 import img4New from "@/imports/____9.png";
-import avatarLin from "@/imports/fa0706fed8fcda03e647959e2506d84b-1.jpg";
+import avatarLin from "@/imports/fa0706fed8fcda03e647959e2506d84b.jpg";
 
 import { MarketDashboard, preheatMarketDashboard } from "./MarketDashboard";
 import { audioAssets } from "../../audio";

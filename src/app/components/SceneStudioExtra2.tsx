@@ -256,7 +256,7 @@ const script = [
   {
     name: '贵哥',
     avatar: avatarGui,
-    text: '来看看公司的调研小组得到的访谈结果吧',
+    text: '来看看公司的调研小组得到的访谈结果吧！',
     showInterviewReportAction: true,
     color: '#E67E22'
   },
